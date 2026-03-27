@@ -1,4 +1,4 @@
-package com.vishal.ecommerce.service.impl;
+package com.vishal.ecommerce.service.Impl;
 
 import com.vishal.ecommerce.dto.req.UserLoginReqDto;
 import com.vishal.ecommerce.dto.req.UserRegisterReqDto;

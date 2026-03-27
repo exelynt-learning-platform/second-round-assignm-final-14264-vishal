@@ -1,3 +1,5 @@
-public class DemoResDto {
+package com.vishal.ecommerce.dto.req;
+
+public class DemoReqDto {
     
 }
