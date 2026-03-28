@@ -749,6 +749,14 @@
         "header": []
       },
       "response": []
+    },
+    {
+      "name": "deleteAllItemFromCart",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
     }
   ]
 }
