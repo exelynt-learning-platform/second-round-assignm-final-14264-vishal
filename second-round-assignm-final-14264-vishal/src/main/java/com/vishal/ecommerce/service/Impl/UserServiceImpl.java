@@ -6,6 +6,7 @@ import com.vishal.ecommerce.dto.res.UserAuthResDto;
 import com.vishal.ecommerce.entity.User;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.UserService;
+import com.vishal.ecommerce.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Override
     public UserAuthResDto register(UserRegisterReqDto request) {
 
@@ -30,11 +34,14 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        UserAuthResDto response = new UserAuthResDto();
-        response.setUsername(user.getUsername());
+String token = jwtUtil.generateToken(user.getUsername());
 
-        return response;
-    }
+UserAuthResDto response = new UserAuthResDto();
+response.setUsername(user.getUsername());
+response.setToken(token);
+
+return response;
+}
 
     @Override
     public UserAuthResDto login(UserLoginReqDto request) {
@@ -49,8 +56,11 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Wrong password");
         }
 
-        UserAuthResDto response = new UserAuthResDto();
-        response.setUsername(user.getUsername());
+String token = jwtUtil.generateToken(user.getUsername());
+
+UserAuthResDto response = new UserAuthResDto();
+response.setUsername(user.getUsername());
+response.setToken(token);
 
         return response;
     }
