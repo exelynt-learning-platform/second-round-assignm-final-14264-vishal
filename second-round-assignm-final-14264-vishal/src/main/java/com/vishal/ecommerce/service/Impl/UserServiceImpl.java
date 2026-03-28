@@ -34,14 +34,14 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername());
 
-UserAuthResDto response = new UserAuthResDto();
-response.setUsername(user.getUsername());
-response.setToken(token);
+        UserAuthResDto response = new UserAuthResDto();
+        response.setUsername(user.getUsername());
+        response.setToken(token);
 
-return response;
-}
+        return response;
+    }
 
     @Override
     public UserAuthResDto login(UserLoginReqDto request) {
@@ -56,11 +56,11 @@ return response;
             throw new RuntimeException("Wrong password");
         }
 
-String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername());
 
-UserAuthResDto response = new UserAuthResDto();
-response.setUsername(user.getUsername());
-response.setToken(token);
+        UserAuthResDto response = new UserAuthResDto();
+        response.setUsername(user.getUsername());
+        response.setToken(token);
 
         return response;
     }
