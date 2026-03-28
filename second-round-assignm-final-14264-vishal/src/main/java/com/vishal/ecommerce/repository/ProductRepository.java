@@ -1,5 +1,8 @@
 package com.vishal.ecommerce.repository;
 
-public class ProductRepository {
-    
+import com.vishal.ecommerce.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductRepository extends JpaRepository<Product, Long> {
+
 }
