@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.vishal.ecommerce.dto.req.CartItemReqDto;
 import com.vishal.ecommerce.dto.res.CartItemResDto;
@@ -18,6 +19,7 @@ import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 
+@Service
 public class CartServiceImpl implements CartService{
     
 
