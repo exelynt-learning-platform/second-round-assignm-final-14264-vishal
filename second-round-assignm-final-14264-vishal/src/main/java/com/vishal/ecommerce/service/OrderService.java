@@ -1,5 +1,15 @@
 package com.vishal.ecommerce.service;
 
-public class OrderService {
-    
+import java.util.List;
+
+import com.vishal.ecommerce.dto.req.OrderReqDto;
+import com.vishal.ecommerce.dto.res.OrderResDto;
+
+public interface OrderService {
+
+        OrderResDto createOrder(String username, OrderReqDto request);
+
+        OrderResDto getOrderById(String username, Long orderId);
+
+        List<OrderResDto> getAllOrders(String username);
 }
