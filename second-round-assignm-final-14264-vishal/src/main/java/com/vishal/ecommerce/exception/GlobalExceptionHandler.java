@@ -54,4 +54,14 @@ Map<String, Object> error = new HashMap<>();
 
     return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
 }
+@ExceptionHandler(UnauthorizedException.class)
+public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
+
+    Map<String, Object> error = new HashMap<>();
+    error.put("status", HttpStatus.UNAUTHORIZED.value());
+    error.put("message", ex.getMessage());
+    error.put("timestamp", LocalDateTime.now());
+
+    return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+}
 }

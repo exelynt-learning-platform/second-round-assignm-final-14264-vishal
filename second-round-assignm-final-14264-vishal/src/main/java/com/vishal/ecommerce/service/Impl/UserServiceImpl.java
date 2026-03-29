@@ -4,6 +4,7 @@ import com.vishal.ecommerce.dto.req.UserLoginReqDto;
 import com.vishal.ecommerce.dto.req.UserRegisterReqDto;
 import com.vishal.ecommerce.dto.res.UserAuthResDto;
 import com.vishal.ecommerce.entity.User;
+import com.vishal.ecommerce.exception.UnauthorizedException;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.UserService;
 import com.vishal.ecommerce.security.JwtUtil;
@@ -49,11 +50,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(request.getEmail());
 
         if (user == null) {
-            throw new RuntimeException("User not found");
+            throw new UnauthorizedException("User not found");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Wrong password");
+            throw new UnauthorizedException("Wrong password");
         }
 
         String token = jwtUtil.generateToken(user.getUsername());
