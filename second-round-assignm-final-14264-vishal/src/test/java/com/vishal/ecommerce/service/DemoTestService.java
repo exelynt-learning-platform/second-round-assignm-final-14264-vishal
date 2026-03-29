@@ -1,5 +1,5 @@
 package com.vishal.ecommerce.service;
 
-public class DemoService {
+public class DemoTestService {
     
 }
