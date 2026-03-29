@@ -17,7 +17,7 @@ import com.vishal.ecommerce.dto.res.OrderResDto;
 import com.vishal.ecommerce.service.OrderService;
 
 @RestController
-@RequestMapping(name="/api/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     @Autowired
