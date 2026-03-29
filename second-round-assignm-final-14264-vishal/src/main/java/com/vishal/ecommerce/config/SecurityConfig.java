@@ -4,6 +4,7 @@ import com.vishal.ecommerce.security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,9 +49,13 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
-                .anyRequest().authenticated());
+        .requestMatchers("/api/auth/**").permitAll()
+        .requestMatchers("/h2-console/**").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/products/**").authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+        .anyRequest().authenticated());
 
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
