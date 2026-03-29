@@ -15,6 +15,8 @@ import com.vishal.ecommerce.dto.req.ProductReqDto;
 import com.vishal.ecommerce.dto.res.ProductResDto;
 import com.vishal.ecommerce.service.ProductService;
 
+import jakarta.validation.Valid;
+
 import java.util.*;
 @RestController
 @RequestMapping("/api/products")
@@ -24,7 +26,7 @@ public class ProductController {
     private ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ProductResDto> addProduct(@RequestBody ProductReqDto request) {
+    public ResponseEntity<ProductResDto> addProduct(@Valid @RequestBody ProductReqDto request) {
         ProductResDto response = productService.addProduct(request);
         return ResponseEntity.ok(response);
     }
@@ -42,7 +44,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResDto> updateProduct(@PathVariable Long id, @RequestBody ProductReqDto request) {
+    public ResponseEntity<ProductResDto> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductReqDto request) {
         ProductResDto response = productService.updateProduct(id, request);
         return ResponseEntity.ok(response);
     }
