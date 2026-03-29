@@ -43,5 +43,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         return intent.getClientSecret();
     }
+
+    @Override
+public void updatePaymentStatus(Long orderId, String status) {
+
+    Order order = orderRepository.findById(orderId).orElse(null);
+
+    if (order == null) {
+        throw new RuntimeException("Order not found");
+    }
+
+    order.setPaymentStatus(status);
+    orderRepository.save(order);
+}
     
 }
