@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.vishal.ecommerce.dto.req.ProductReqDto;
 import com.vishal.ecommerce.dto.res.ProductResDto;
 import com.vishal.ecommerce.entity.Product;
+import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.service.ProductService;
 
@@ -63,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id).orElse(null);
 
         if (product == null) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         ProductResDto response = new ProductResDto();
@@ -82,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id).orElse(null);
 
         if (product == null) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         product.setName(request.getName());
@@ -108,7 +109,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id).orElse(null);
 
         if (product == null) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         productRepository.delete(product);
