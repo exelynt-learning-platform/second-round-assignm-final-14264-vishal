@@ -13,6 +13,8 @@ import com.vishal.ecommerce.entity.Cart;
 import com.vishal.ecommerce.entity.CartItem;
 import com.vishal.ecommerce.entity.Product;
 import com.vishal.ecommerce.entity.User;
+import com.vishal.ecommerce.exception.BadRequestException;
+import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.CartItemRepository;
 import com.vishal.ecommerce.repository.CartRepository;
 import com.vishal.ecommerce.repository.ProductRepository;
@@ -82,11 +84,11 @@ public class CartServiceImpl implements CartService{
         Product product = productRepository.findById(request.getProductId()).orElse(null);
 
         if (product == null) {
-            throw new RuntimeException("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         }
 
         if (product.getStock() < request.getQuantity()) {
-            throw new RuntimeException("Not enough stock");
+            throw new BadRequestException("Not enough stock");
         }
 
         CartItem item = new CartItem();
