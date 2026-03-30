@@ -46,9 +46,15 @@ public class OrderServiceImpl implements OrderService {
         double total = 0;
 
         for (var item : cart.getItems()) {
-            products.add(item.getProduct());
-            total += item.getProduct().getPrice() * item.getQuantity();
-        }
+
+    if (item.getProduct().getStock() < item.getQuantity()) {
+        throw new BadRequestException("Not enough stock for product: " + item.getProduct().getName());
+    }
+
+    item.getProduct().setStock(item.getProduct().getStock() - item.getQuantity());
+    products.add(item.getProduct());
+    total += item.getProduct().getPrice() * item.getQuantity();
+}
 
         Order order = new Order();
         order.setUser(user);
