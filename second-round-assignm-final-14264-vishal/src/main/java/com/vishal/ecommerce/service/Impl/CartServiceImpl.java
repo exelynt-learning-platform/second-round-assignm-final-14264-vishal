@@ -107,7 +107,7 @@ public class CartServiceImpl implements CartService{
         CartItem item = cartItemRepository.findById(cartItemId).orElse(null);
 
         if (item == null) {
-            throw new RuntimeException("Cart item not found");
+            throw new ResourceNotFoundException("Cart item not found");
         }
 
         item.setQuantity(quantity);
@@ -122,7 +122,7 @@ public class CartServiceImpl implements CartService{
         CartItem item = cartItemRepository.findById(cartItemId).orElse(null);
 
         if (item == null) {
-            throw new RuntimeException("Cart item not found");
+            throw new ResourceNotFoundException("Cart item not found");
         }
 
         cartItemRepository.delete(item);
