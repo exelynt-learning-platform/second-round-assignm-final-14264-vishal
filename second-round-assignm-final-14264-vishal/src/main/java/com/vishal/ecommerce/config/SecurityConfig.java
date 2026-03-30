@@ -1,6 +1,5 @@
 package com.vishal.ecommerce.config;
 
-import com.vishal.ecommerce.exception.UnauthorizedException;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -34,7 +34,8 @@ private UserRepository userRepository;
     return username -> {
         com.vishal.ecommerce.entity.User user = userRepository.findByUsername(username);
         if (user == null) {
-            throw new UnauthorizedException("User not found");
+                throw new UsernameNotFoundException("User not found");
+
         }
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
