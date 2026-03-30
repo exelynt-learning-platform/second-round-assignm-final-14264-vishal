@@ -1,5 +1,7 @@
 package com.vishal.ecommerce.config;
 
+import com.vishal.ecommerce.exception.UnauthorizedException;
+import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,9 +26,22 @@ public class SecurityConfig {
     @Autowired
     private JwtFilter jwtFilter;
 
+    @Autowired
+private UserRepository userRepository;
+
     @Bean
     public UserDetailsService userDetailsService() {
-    return username -> User.withUsername(username).password("").authorities("USER").build();
+    return username -> {
+        com.vishal.ecommerce.entity.User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UnauthorizedException("User not found");
+        }
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .roles(user.getRole().replace("ROLE_", ""))
+                .build();
+    };
 }
 
     @Bean
