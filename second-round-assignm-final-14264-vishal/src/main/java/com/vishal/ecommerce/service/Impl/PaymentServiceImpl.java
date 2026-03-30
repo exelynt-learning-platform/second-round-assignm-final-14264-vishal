@@ -8,6 +8,7 @@ import com.stripe.Stripe;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.vishal.ecommerce.entity.Order;
+import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.OrderRepository;
 import com.vishal.ecommerce.service.PaymentService;
 
@@ -27,7 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(orderId).orElse(null);
 
         if (order == null) {
-            throw new RuntimeException("Order not found");
+            throw new ResourceNotFoundException("Order not found");
         }
 
         Stripe.apiKey = stripeSecretKey;
@@ -50,7 +51,7 @@ public void updatePaymentStatus(Long orderId, String status) {
     Order order = orderRepository.findById(orderId).orElse(null);
 
     if (order == null) {
-        throw new RuntimeException("Order not found");
+        throw new ResourceNotFoundException("Order not found");
     }
 
     order.setPaymentStatus(status);

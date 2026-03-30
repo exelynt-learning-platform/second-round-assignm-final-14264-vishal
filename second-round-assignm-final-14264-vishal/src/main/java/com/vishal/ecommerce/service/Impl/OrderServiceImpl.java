@@ -13,6 +13,8 @@ import com.vishal.ecommerce.entity.Cart;
 import com.vishal.ecommerce.entity.Order;
 import com.vishal.ecommerce.entity.Product;
 import com.vishal.ecommerce.entity.User;
+import com.vishal.ecommerce.exception.BadRequestException;
+import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.CartRepository;
 import com.vishal.ecommerce.repository.OrderRepository;
 import com.vishal.ecommerce.repository.UserRepository;
@@ -37,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
         Cart cart = cartRepository.findByUser(user);
 
         if (cart == null || cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new BadRequestException("Cart is empty");
         }
 
         List<Product> products = new ArrayList<>();
@@ -70,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId).orElse(null);
 
         if (order == null) {
-            throw new RuntimeException("Order not found");
+            throw new ResourceNotFoundException("Order not found");
         }
 
         return mapToOrderResDto(order);
