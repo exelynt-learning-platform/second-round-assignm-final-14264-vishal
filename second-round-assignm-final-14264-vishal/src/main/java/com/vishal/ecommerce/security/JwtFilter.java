@@ -10,11 +10,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JwtFilter.class);
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -41,10 +44,10 @@ public class JwtFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
                 
 
-        }else{
-                System.out.println("Token is invalid!");
+        } else {
+    logger.warn("Invalid JWT token received");
+}
 
-        }
 
         filterChain.doFilter(request, response);
     }

@@ -31,6 +31,10 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ResourceNotFoundException("Order not found");
         }
 
+        if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+    throw new IllegalStateException("Stripe secret key is not configured");
+}
+
         Stripe.apiKey = stripeSecretKey;
 
         long amount = (long) (order.getTotalPrice() * 100);
@@ -54,6 +58,7 @@ public void updatePaymentStatus(Long orderId, String status) {
         throw new ResourceNotFoundException("Order not found");
     }
 
+    
     order.setPaymentStatus(status);
     orderRepository.save(order);
 }

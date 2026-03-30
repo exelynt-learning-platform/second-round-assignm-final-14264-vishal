@@ -111,7 +111,12 @@ public class CartServiceImpl implements CartService{
         }
 
 
-        if (!item.getCart().getUser().getUsername().equals(username)) {
+        if (item.getCart() == null || item.getCart().getUser() == null) {
+    throw new BadRequestException("Invalid cart item");
+
+}
+
+if (!item.getCart().getUser().getUsername().equals(username)) {
     throw new BadRequestException("You are not authorized to update this item");
 }
 
@@ -135,10 +140,13 @@ if (item.getProduct().getStock() < quantity) {
         }
 
 
-        if (!item.getCart().getUser().getUsername().equals(username)) {
-    throw new BadRequestException("You are not authorized to remove this item");
+        if (item.getCart() == null || item.getCart().getUser() == null) {
+    throw new BadRequestException("Invalid cart item");
 }
-        cartItemRepository.delete(item);
+       if (!item.getCart().getUser().getUsername().equals(username)) {
+    throw new BadRequestException("You are not authorized to remove this item");
+} 
+cartItemRepository.delete(item);
     }
 
     @Override
