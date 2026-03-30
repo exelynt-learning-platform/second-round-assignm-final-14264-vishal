@@ -110,6 +110,11 @@ public class CartServiceImpl implements CartService{
             throw new ResourceNotFoundException("Cart item not found");
         }
 
+
+        if (!item.getCart().getUser().getUsername().equals(username)) {
+    throw new BadRequestException("You are not authorized to update this item");
+}
+
         item.setQuantity(quantity);
         cartItemRepository.save(item);
 
@@ -125,6 +130,10 @@ public class CartServiceImpl implements CartService{
             throw new ResourceNotFoundException("Cart item not found");
         }
 
+
+        if (!item.getCart().getUser().getUsername().equals(username)) {
+    throw new BadRequestException("You are not authorized to remove this item");
+}
         cartItemRepository.delete(item);
     }
 
