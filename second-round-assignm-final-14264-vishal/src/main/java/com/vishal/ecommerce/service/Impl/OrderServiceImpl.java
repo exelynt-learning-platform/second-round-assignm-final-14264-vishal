@@ -17,6 +17,7 @@ import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.CartRepository;
 import com.vishal.ecommerce.repository.OrderRepository;
+import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.OrderService;
 
@@ -28,6 +29,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+private ProductRepository productRepository;
+
 
     @Autowired
     private CartRepository cartRepository;
@@ -52,6 +57,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     item.getProduct().setStock(item.getProduct().getStock() - item.getQuantity());
+    productRepository.save(item.getProduct());
+
     products.add(item.getProduct());
     total += item.getProduct().getPrice() * item.getQuantity();
 }
