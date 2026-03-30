@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.vishal.ecommerce.dto.req.OrderReqDto;
 import com.vishal.ecommerce.dto.res.OrderResDto;
@@ -37,6 +38,7 @@ private ProductRepository productRepository;
     @Autowired
     private CartRepository cartRepository;
 
+    @Transactional
     @Override
     public OrderResDto createOrder(String username, OrderReqDto request) {
 

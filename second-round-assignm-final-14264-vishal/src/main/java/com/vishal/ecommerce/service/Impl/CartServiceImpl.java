@@ -115,6 +115,10 @@ public class CartServiceImpl implements CartService{
     throw new BadRequestException("You are not authorized to update this item");
 }
 
+if (item.getProduct().getStock() < quantity) {
+    throw new BadRequestException("Not enough stock available");
+}
+
         item.setQuantity(quantity);
         cartItemRepository.save(item);
 
