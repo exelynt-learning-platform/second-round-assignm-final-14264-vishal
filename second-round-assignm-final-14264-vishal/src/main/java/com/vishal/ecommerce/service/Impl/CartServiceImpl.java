@@ -23,8 +23,7 @@ import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 
 @Service
-public class CartServiceImpl implements CartService{
-    
+public class CartServiceImpl implements CartService {
 
     @Autowired
     private CartRepository cartRepository;
@@ -55,8 +54,8 @@ public class CartServiceImpl implements CartService{
 
         for (CartItem item : cart.getItems()) {
             if (item.getProduct() == null) {
-        continue;
-    }
+                continue;
+            }
             CartItemResDto dto = new CartItemResDto();
             dto.setId(item.getId());
             dto.setProductName(item.getProduct().getName());
@@ -113,19 +112,22 @@ public class CartServiceImpl implements CartService{
         CartItem item = cartItemRepository.findById(cartItemId).orElse(null);
 
         if (item == null) {
-    throw new ResourceNotFoundException("Cart item not found");
-}
+            throw new ResourceNotFoundException("Cart item not found");
+        }
 
-if (quantity <= 0) {
-    throw new BadRequestException("Quantity must be greater than zero");
-}
+        if (quantity <= 0) {
+            throw new BadRequestException("Quantity must be greater than zero");
+        }
 
-validateCartItemOwnership(item, username);
+        validateCartItemOwnership(item, username);
 
+        if (item.getProduct() == null) {
+            throw new ResourceNotFoundException("Product not found for this cart item");
+        }
 
-if (item.getProduct().getStock() < quantity) {
-    throw new BadRequestException("Not enough stock available");
-}
+        if (item.getProduct().getStock() < quantity) {
+            throw new BadRequestException("Not enough stock available");
+        }
 
         item.setQuantity(quantity);
         cartItemRepository.save(item);
@@ -142,10 +144,9 @@ if (item.getProduct().getStock() < quantity) {
             throw new ResourceNotFoundException("Cart item not found");
         }
 
-
         validateCartItemOwnership(item, username);
 
-cartItemRepository.delete(item);
+        cartItemRepository.delete(item);
     }
 
     @Override
@@ -157,15 +158,15 @@ cartItemRepository.delete(item);
     }
 
     private void validateCartItemOwnership(CartItem item, String username) {
-    if (item.getCart() == null) {
-        throw new BadRequestException("Cart item is not associated with any cart");
+        if (item.getCart() == null) {
+            throw new BadRequestException("Cart item is not associated with any cart");
+        }
+        if (item.getCart().getUser() == null) {
+            throw new BadRequestException("Cart is not associated with any user");
+        }
+        if (!item.getCart().getUser().getUsername().equals(username)) {
+            throw new BadRequestException("You are not authorized to access this cart item");
+        }
     }
-    if (item.getCart().getUser()== null) {
-        throw new BadRequestException("Cart is not associated with any user");
-    }
-    if (!item.getCart().getUser().getUsername().equals(username)) {
-        throw new BadRequestException("You are not authorized to access this cart item");
-    }
-}
 
 }

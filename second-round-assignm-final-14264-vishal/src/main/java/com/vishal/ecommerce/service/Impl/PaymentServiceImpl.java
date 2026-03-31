@@ -14,12 +14,10 @@ import com.vishal.ecommerce.service.PaymentService;
 
 import jakarta.annotation.PostConstruct;
 
-
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PaymentServiceImpl.class);
-
 
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
@@ -28,15 +26,13 @@ public class PaymentServiceImpl implements PaymentService {
     private OrderRepository orderRepository;
 
     @PostConstruct
-public void validateStripeConfig() {
-    if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
-throw new IllegalStateException(
-            "Stripe secret key is not configured. Set the STRIPE_SECRET_KEY environment variable.");
-        
+    public void validateStripeConfig() {
+        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
+            logger.warn("Stripe secret key is not configured. Payment features will not work.");
+        } else {
+            logger.info("Stripe payment service initialized successfully.");
         }
-        logger.info("Stripe payment service initialized successfully.");
-}
-
+    }
 
     @Override
     public String createPaymentIntent(Long orderId) throws Exception {
@@ -46,7 +42,6 @@ throw new IllegalStateException(
         if (order == null) {
             throw new ResourceNotFoundException("Order not found");
         }
-
 
         Stripe.apiKey = stripeSecretKey;
 
@@ -63,17 +58,16 @@ throw new IllegalStateException(
     }
 
     @Override
-public void updatePaymentStatus(Long orderId, String status) {
+    public void updatePaymentStatus(Long orderId, String status) {
 
-    Order order = orderRepository.findById(orderId).orElse(null);
+        Order order = orderRepository.findById(orderId).orElse(null);
 
-    if (order == null) {
-        throw new ResourceNotFoundException("Order not found");
+        if (order == null) {
+            throw new ResourceNotFoundException("Order not found");
+        }
+
+        order.setPaymentStatus(status);
+        orderRepository.save(order);
     }
 
-    
-    order.setPaymentStatus(status);
-    orderRepository.save(order);
-}
-    
 }

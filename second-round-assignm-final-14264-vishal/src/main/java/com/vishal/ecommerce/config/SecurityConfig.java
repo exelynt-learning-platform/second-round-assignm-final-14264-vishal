@@ -26,30 +26,30 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Autowired
-private UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-    return username -> {
-        com.vishal.ecommerce.entity.User user = userRepository.findByUsername(username);
-        if (user == null) {
+        return username -> {
+            com.vishal.ecommerce.entity.User user = userRepository.findByUsername(username);
+            if (user == null) {
                 throw new UsernameNotFoundException("User not found");
 
-        }
-        String role = user.getRole();
-        if (role == null || role.isBlank()) {
-                role = "USER"; 
+            }
+            String role = user.getRole();
+            if (role == null || role.isBlank()) {
+                role = "USER";
             } else if (role.startsWith("ROLE_")) {
                 role = role.substring(5);
             }
 
-return org.springframework.security.core.userdetails.User
-        .withUsername(user.getUsername())
-        .password(user.getPassword())
-        .roles(role)
-        .build();
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getUsername())
+                    .password(user.getPassword())
+                    .roles(role)
+                    .build();
 
-};
+        };
     }
 
     @Bean
@@ -61,6 +61,7 @@ return org.springframework.security.core.userdetails.User
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -68,20 +69,17 @@ return org.springframework.security.core.userdetails.User
 
         http.securityContext(context -> context.requireExplicitSave(false));
 
-        http.sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.authorizeHttpRequests(auth -> auth
-        .requestMatchers("/api/auth/**").permitAll()
-        .requestMatchers("/h2-console/**").permitAll()
-        .requestMatchers(HttpMethod.GET, "/api/products/**").authenticated()
-        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-        .anyRequest().authenticated());
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/products/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                .anyRequest().authenticated());
 
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
-
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

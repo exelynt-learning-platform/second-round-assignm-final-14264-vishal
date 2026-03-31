@@ -36,7 +36,6 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private ProductRepository productRepository;
 
-
     @Autowired
     private CartRepository cartRepository;
 
@@ -61,23 +60,22 @@ public class OrderServiceImpl implements OrderService {
 
         for (var item : cart.getItems()) {
 
-    Product product = item.getProduct();
+            Product product = item.getProduct();
 
-if (product == null) {
-    throw new ResourceNotFoundException("Product not found in cart item");
-}
+            if (product == null) {
+                throw new ResourceNotFoundException("Product not found in cart item");
+            }
 
-if (product.getStock() < item.getQuantity()) {
-    throw new BadRequestException("Not enough stock for product: " + product.getName());
-}
+            if (product.getStock() < item.getQuantity()) {
+                throw new BadRequestException("Not enough stock for product: " + product.getName());
+            }
 
-product.setStock(product.getStock() - item.getQuantity());
-productRepository.save(product);
+            product.setStock(product.getStock() - item.getQuantity());
+            productRepository.save(product);
 
-
-    products.add(item.getProduct());
-    total += item.getProduct().getPrice() * item.getQuantity();
-}
+            products.add(product);
+            total += product.getPrice() * item.getQuantity();
+        }
 
         Order order = new Order();
         order.setUser(user);
@@ -98,8 +96,8 @@ productRepository.save(product);
     @Override
     public OrderResDto getOrderById(String username, Long orderId) {
 
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         return mapToOrderResDto(order);
     }
@@ -115,10 +113,9 @@ productRepository.save(product);
 
     private OrderResDto mapToOrderResDto(Order order) {
 
-       List<String> productNames = order.getProducts().stream()
-        .map(Product::getName)
-        .collect(Collectors.toList());
-
+        List<String> productNames = order.getProducts().stream()
+                .map(Product::getName)
+                .collect(Collectors.toList());
 
         OrderResDto response = new OrderResDto();
         response.setId(order.getId());
@@ -130,5 +127,5 @@ productRepository.save(product);
 
         return response;
     }
-    
+
 }
