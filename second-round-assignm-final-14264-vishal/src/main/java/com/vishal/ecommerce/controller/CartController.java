@@ -39,9 +39,9 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
-   @PutMapping("/items/{itemId}/{quantity}")
-public ResponseEntity<CartResDto> updateItem(@PathVariable Long itemId, @PathVariable Integer quantity) {
-    CartResDto response = cartService.updateItem(getUsername(), itemId, quantity);
+   @PutMapping("/items/{itemId}")
+public ResponseEntity<CartResDto> updateItem(@PathVariable Long itemId, @RequestBody CartItemReqDto request) {
+    CartResDto response = cartService.updateItem(getUsername(), itemId, request.getQuantity());
     return ResponseEntity.ok(response);
 }
 

@@ -107,11 +107,15 @@ public class CartServiceImpl implements CartService{
         CartItem item = cartItemRepository.findById(cartItemId).orElse(null);
 
         if (item == null) {
-            throw new ResourceNotFoundException("Cart item not found");
-        }
+    throw new ResourceNotFoundException("Cart item not found");
+}
 
+if (quantity <= 0) {
+    throw new BadRequestException("Quantity must be greater than zero");
+}
 
-        if (item.getCart() == null || item.getCart().getUser() == null) {
+if (item.getCart() == null || item.getCart().getUser() == null) {
+
     throw new BadRequestException("Invalid cart item");
 
 }
