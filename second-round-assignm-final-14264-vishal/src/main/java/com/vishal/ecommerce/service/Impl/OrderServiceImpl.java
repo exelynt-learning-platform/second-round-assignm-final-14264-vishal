@@ -54,12 +54,19 @@ private ProductRepository productRepository;
 
         for (var item : cart.getItems()) {
 
-    if (item.getProduct().getStock() < item.getQuantity()) {
-        throw new BadRequestException("Not enough stock for product: " + item.getProduct().getName());
-    }
+    Product product = item.getProduct();
 
-    item.getProduct().setStock(item.getProduct().getStock() - item.getQuantity());
-    productRepository.save(item.getProduct());
+if (product == null) {
+    throw new ResourceNotFoundException("Product not found in cart item");
+}
+
+if (product.getStock() < item.getQuantity()) {
+    throw new BadRequestException("Not enough stock for product: " + product.getName());
+}
+
+product.setStock(product.getStock() - item.getQuantity());
+productRepository.save(product);
+
 
     products.add(item.getProduct());
     total += item.getProduct().getPrice() * item.getQuantity();

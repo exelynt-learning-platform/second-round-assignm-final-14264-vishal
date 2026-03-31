@@ -4,6 +4,7 @@ import com.vishal.ecommerce.dto.req.UserLoginReqDto;
 import com.vishal.ecommerce.dto.req.UserRegisterReqDto;
 import com.vishal.ecommerce.dto.res.UserAuthResDto;
 import com.vishal.ecommerce.entity.User;
+import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.UnauthorizedException;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.UserService;
@@ -27,8 +28,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserAuthResDto register(UserRegisterReqDto request) {
 
-        User user = new User();
-        user.setUsername(request.getUsername());
+    if (userRepository.findByUsername(request.getUsername()) != null) {
+        throw new BadRequestException("Username already exists");
+    }
+
+    if (userRepository.findByEmail(request.getEmail()) != null) {
+        throw new BadRequestException("Email already registered");
+    }
+
+    User user = new User();
+    user.setUsername(request.getUsername());
+
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("ROLE_USER");
