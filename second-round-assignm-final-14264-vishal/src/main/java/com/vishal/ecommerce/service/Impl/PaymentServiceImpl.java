@@ -18,6 +18,9 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PaymentServiceImpl.class);
+
+
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
 
@@ -27,7 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
     @PostConstruct
 public void validateStripeConfig() {
     if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
-        throw new IllegalStateException("Stripe secret key is not configured. Set STRIPE_SECRET_KEY environment variable.");
+        logger.warn("Stripe secret key is not configured. Payment features will not work.");
     }
 }
 

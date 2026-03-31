@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,26 +23,22 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    private String getUsername() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
-    }
+   
 
     @PostMapping
-    public ResponseEntity<OrderResDto> createOrder(@RequestBody OrderReqDto request) {
-        OrderResDto response = orderService.createOrder(getUsername(), request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<OrderResDto> createOrder(@AuthenticationPrincipal String username, @RequestBody OrderReqDto request) {
+        return ResponseEntity.ok(orderService.createOrder(username, request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrderResDto> getOrderById(@PathVariable Long id) {
-        OrderResDto response = orderService.getOrderById(getUsername(), id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<OrderResDto> getOrderById(@AuthenticationPrincipal String username,@PathVariable Long id) {
+
+        return ResponseEntity.ok(orderService.getOrderById(username, id));
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResDto>> getAllOrders() {
-        List<OrderResDto> response = orderService.getAllOrders(getUsername());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<List<OrderResDto>> getAllOrders(@AuthenticationPrincipal String username) {
+        return ResponseEntity.ok(orderService.getAllOrders(username));
     }
     
 }
