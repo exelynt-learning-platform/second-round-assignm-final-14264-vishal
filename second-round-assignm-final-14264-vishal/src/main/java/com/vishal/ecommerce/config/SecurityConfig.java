@@ -36,10 +36,12 @@ public class SecurityConfig {
                 throw new UsernameNotFoundException("User not found");
 
             }
-           String role = user.getRole() != null ? user.getRole() : "USER";
+           String role = user.getRole();
 
-if (role.startsWith("ROLE_")) {
-    role = role.substring(5);
+if (role == null || role.isBlank()) {
+    role = "USER";
+} else if (role.startsWith("ROLE_")) {
+    role = role.replace("ROLE_", "");
 }
 
 

@@ -165,16 +165,18 @@ if (exists) {
 
     private void validateCartItemOwnership(CartItem item, String username) {
 
-    if (item == null || item.getCart() == null || item.getCart().getUser() == null) {
-        throw new BadRequestException("Invalid cart item ownership");
-    }
+   if (item == null 
+    || item.getCart() == null 
+    || item.getCart().getUser() == null 
+    || item.getCart().getUser().getUsername() == null) {
 
-    User user = item.getCart().getUser();
-    String cartUsername = user.getUsername();
-
-    if (cartUsername == null || !cartUsername.equals(username)) {
-        throw new BadRequestException("Unauthorized access");
-    }
+    throw new BadRequestException("Invalid cart item ownership");
 }
 
+User user = item.getCart().getUser();
+
+if (!user.getUsername().equals(username)) {
+    throw new BadRequestException("Unauthorized access");
+}
+    }
 }
