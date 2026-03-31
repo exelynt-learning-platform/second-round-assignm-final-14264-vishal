@@ -75,6 +75,7 @@ public class CartServiceImpl implements CartService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CartResDto getCart(String username) {
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
