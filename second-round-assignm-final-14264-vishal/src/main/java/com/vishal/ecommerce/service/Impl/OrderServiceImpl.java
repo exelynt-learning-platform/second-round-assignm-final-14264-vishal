@@ -38,7 +38,7 @@ private ProductRepository productRepository;
     @Autowired
     private CartRepository cartRepository;
 
-    @Transactional
+    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.SERIALIZABLE)
     @Override
     public OrderResDto createOrder(String username, OrderReqDto request) {
 

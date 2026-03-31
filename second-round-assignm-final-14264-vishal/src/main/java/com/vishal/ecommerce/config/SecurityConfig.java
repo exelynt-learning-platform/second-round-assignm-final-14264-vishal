@@ -37,13 +37,17 @@ private UserRepository userRepository;
                 throw new UsernameNotFoundException("User not found");
 
         }
-        return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
-                .roles(user.getRole().replace("ROLE_", ""))
-                .build();
-    };
-}
+        String role = user.getRole() != null ? user.getRole() : "ROLE_USER";
+String roleWithoutPrefix = role.startsWith("ROLE_") ? role.substring(5) : role;
+
+return org.springframework.security.core.userdetails.User
+        .withUsername(user.getUsername())
+        .password(user.getPassword())
+        .roles(roleWithoutPrefix)
+        .build();
+
+};
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
