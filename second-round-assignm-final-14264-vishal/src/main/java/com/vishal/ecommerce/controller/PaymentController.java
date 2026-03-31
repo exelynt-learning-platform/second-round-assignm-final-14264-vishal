@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.service.PaymentService;
 
 @RestController
@@ -19,14 +20,19 @@ public class PaymentController {
     private PaymentService paymentService;
 
     @PostMapping("/create-intent/{orderId}")
-    public ResponseEntity<String> createPaymentIntent(@PathVariable Long orderId) {
-        try {
-            String clientSecret = paymentService.createPaymentIntent(orderId);
-            return ResponseEntity.ok(clientSecret);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+public ResponseEntity<String> createPaymentIntent(@PathVariable Long orderId) {
+    try {
+        String clientSecret = paymentService.createPaymentIntent(orderId);
+        return ResponseEntity.ok(clientSecret);
+    } catch (ResourceNotFoundException e) {
+        return ResponseEntity.status(404).body(e.getMessage());
+    } catch (IllegalStateException e) {
+        return ResponseEntity.status(500).body("Payment service not configured");
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body("Payment processing failed");
     }
+}
+
 
     @PostMapping("/update-status/{orderId}")
 public ResponseEntity<String> updatePaymentStatus(@PathVariable Long orderId, @RequestParam String status) {

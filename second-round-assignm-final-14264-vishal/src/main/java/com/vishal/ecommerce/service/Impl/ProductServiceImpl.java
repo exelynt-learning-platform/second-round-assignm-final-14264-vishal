@@ -29,14 +29,8 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.save(product);
 
-        ProductResDto response = new ProductResDto();
-        response.setId(product.getId());
-        response.setName(product.getName());
-        response.setDescription(product.getDescription());
-        response.setPrice(product.getPrice());
-        response.setStock(product.getStock());
+        return mapToDto(product);
 
-        return response;
     }
 
     @Override
@@ -67,14 +61,8 @@ public class ProductServiceImpl implements ProductService {
             throw new ResourceNotFoundException("Product not found");
         }
 
-        ProductResDto response = new ProductResDto();
-        response.setId(product.getId());
-        response.setName(product.getName());
-        response.setDescription(product.getDescription());
-        response.setPrice(product.getPrice());
-        response.setStock(product.getStock());
+        return mapToDto(product);
 
-        return response;
     }
 
     @Override
@@ -93,14 +81,8 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.save(product);
 
-        ProductResDto response = new ProductResDto();
-        response.setId(product.getId());
-        response.setName(product.getName());
-        response.setDescription(product.getDescription());
-        response.setPrice(product.getPrice());
-        response.setStock(product.getStock());
+        return mapToDto(product);
 
-        return response;
     }
 
     @Override
@@ -114,5 +96,16 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.delete(product);
     }
+
+    private ProductResDto mapToDto(Product product) {
+    ProductResDto dto = new ProductResDto();
+    dto.setId(product.getId());
+    dto.setName(product.getName());
+    dto.setDescription(product.getDescription());
+    dto.setPrice(product.getPrice());
+    dto.setStock(product.getStock());
+    return dto;
+}
+
     
 }
