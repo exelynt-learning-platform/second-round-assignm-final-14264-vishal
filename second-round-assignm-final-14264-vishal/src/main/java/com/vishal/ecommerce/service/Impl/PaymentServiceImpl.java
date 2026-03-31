@@ -12,6 +12,8 @@ import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.OrderRepository;
 import com.vishal.ecommerce.service.PaymentService;
 
+import jakarta.annotation.PostConstruct;
+
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -21,6 +23,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private OrderRepository orderRepository;
+
+    @PostConstruct
+public void validateStripeConfig() {
+    if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+        throw new IllegalStateException("Stripe secret key is not configured. Set STRIPE_SECRET_KEY environment variable.");
+    }
+}
+
 
     @Override
     public String createPaymentIntent(Long orderId) throws Exception {
