@@ -47,9 +47,6 @@ throw new IllegalStateException(
             throw new ResourceNotFoundException("Order not found");
         }
 
-        if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
-    throw new IllegalStateException("Stripe secret key is not configured");
-}
 
         Stripe.apiKey = stripeSecretKey;
 

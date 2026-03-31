@@ -34,7 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private UserRepository userRepository;
 
     @Autowired
-private ProductRepository productRepository;
+    private ProductRepository productRepository;
 
 
     @Autowired
@@ -100,9 +100,6 @@ productRepository.save(product);
 
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
-        if (order == null) {
-            throw new ResourceNotFoundException("Order not found");
-        }
 
         return mapToOrderResDto(order);
     }
