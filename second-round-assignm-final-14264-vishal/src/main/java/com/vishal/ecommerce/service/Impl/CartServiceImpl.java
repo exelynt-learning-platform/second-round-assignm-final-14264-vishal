@@ -114,15 +114,8 @@ if (quantity <= 0) {
     throw new BadRequestException("Quantity must be greater than zero");
 }
 
-if (item.getCart() == null || item.getCart().getUser() == null) {
+validateCartItemOwnership(item, username);
 
-    throw new BadRequestException("Invalid cart item");
-
-}
-
-if (!item.getCart().getUser().getUsername().equals(username)) {
-    throw new BadRequestException("You are not authorized to update this item");
-}
 
 if (item.getProduct().getStock() < quantity) {
     throw new BadRequestException("Not enough stock available");
@@ -144,12 +137,8 @@ if (item.getProduct().getStock() < quantity) {
         }
 
 
-        if (item.getCart() == null || item.getCart().getUser() == null) {
-    throw new BadRequestException("Invalid cart item");
-}
-       if (!item.getCart().getUser().getUsername().equals(username)) {
-    throw new BadRequestException("You are not authorized to remove this item");
-} 
+        validateCartItemOwnership(item, username);
+
 cartItemRepository.delete(item);
     }
 
@@ -160,4 +149,14 @@ cartItemRepository.delete(item);
         cart.getItems().clear();
         cartRepository.save(cart);
     }
+
+    private void validateCartItemOwnership(CartItem item, String username) {
+    if (item.getCart() == null || item.getCart().getUser() == null) {
+        throw new BadRequestException("Invalid cart item");
+    }
+    if (!item.getCart().getUser().getUsername().equals(username)) {
+        throw new BadRequestException("You are not authorized to access this item");
+    }
+}
+
 }

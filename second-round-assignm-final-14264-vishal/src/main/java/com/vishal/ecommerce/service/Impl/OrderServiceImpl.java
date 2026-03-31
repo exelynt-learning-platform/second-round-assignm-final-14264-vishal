@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
 
 import com.vishal.ecommerce.dto.req.OrderReqDto;
 import com.vishal.ecommerce.dto.res.OrderResDto;
@@ -116,10 +117,10 @@ productRepository.save(product);
 
     private OrderResDto mapToOrderResDto(Order order) {
 
-        List<String> productNames = new ArrayList<>();
-        for (Product product : order.getProducts()) {
-            productNames.add(product.getName());
-        }
+       List<String> productNames = order.getProducts().stream()
+        .map(Product::getName)
+        .collect(Collectors.toList());
+
 
         OrderResDto response = new OrderResDto();
         response.setId(order.getId());

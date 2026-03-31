@@ -40,14 +40,9 @@ public class ProductServiceImpl implements ProductService {
         List<ProductResDto> response = new ArrayList<>();
 
         for (Product product : products) {
-            ProductResDto dto = new ProductResDto();
-            dto.setId(product.getId());
-            dto.setName(product.getName());
-            dto.setDescription(product.getDescription());
-            dto.setPrice(product.getPrice());
-            dto.setStock(product.getStock());
-            response.add(dto);
-        }
+    response.add(mapToDto(product));
+}
+
 
         return response;
     }
