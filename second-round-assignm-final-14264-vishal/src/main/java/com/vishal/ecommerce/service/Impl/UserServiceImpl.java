@@ -10,6 +10,7 @@ import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.UserService;
 import com.vishal.ecommerce.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +26,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
- private static final int MIN_PASSWORD_LENGTH = 6;
-
+@Value("${app.password.min-length:6}")
+private int minPasswordLength;
 
     @Override
     public UserAuthResDto register(UserRegisterReqDto request) {
@@ -45,9 +46,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(request.getEmail());
 
 
-if (request.getPassword() == null || request.getPassword().length() < MIN_PASSWORD_LENGTH) {
+if (request.getPassword() == null || request.getPassword().length() < minPasswordLength) {
     throw new BadRequestException(
-        "Password must be at least " + MIN_PASSWORD_LENGTH + " characters long"
+        "Password must be at least " + minPasswordLength + " characters long"
     );
 }
         user.setPassword(passwordEncoder.encode(request.getPassword()));

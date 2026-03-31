@@ -47,9 +47,8 @@ public class PaymentServiceImpl implements PaymentService {
             throw new ResourceNotFoundException("Order not found");
         }
 
-        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
-    throw new IllegalStateException("Stripe API key is not configured");
-}
+        
+
 
 Stripe.apiKey = stripeSecretKey;
 

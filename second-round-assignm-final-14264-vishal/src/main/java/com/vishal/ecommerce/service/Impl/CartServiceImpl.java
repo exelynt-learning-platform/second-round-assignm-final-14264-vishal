@@ -82,12 +82,21 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public CartResDto addItem(String username, CartItemReqDto request) {
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
 
        Product product = productRepository.findById(request.getProductId()).
        orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+       boolean exists = cart.getItems().stream()
+        .anyMatch(i -> i.getProduct() != null &&
+                i.getProduct().getId().equals(product.getId()));
+
+if (exists) {
+    throw new BadRequestException("Product already exists in cart");
+}
 
         if (product.getStock() < request.getQuantity()) {
             throw new BadRequestException("Not enough stock");
@@ -156,24 +165,16 @@ public class CartServiceImpl implements CartService {
 
     private void validateCartItemOwnership(CartItem item, String username) {
 
-        if (item == null) {
-    throw new BadRequestException("Cart item not found");
-}
-
-Cart cart = item.getCart();
-if (cart == null) {
-    throw new BadRequestException("Cart not found");
-}
-
-User user = cart.getUser();
-if (user == null) {
-    throw new BadRequestException("User not found");
-}
-
-String cartUsername = user.getUsername();
-if (cartUsername == null || !cartUsername.equals(username)) {
-    throw new BadRequestException("Unauthorized access");
-}
+    if (item == null || item.getCart() == null || item.getCart().getUser() == null) {
+        throw new BadRequestException("Invalid cart item ownership");
     }
+
+    User user = item.getCart().getUser();
+    String cartUsername = user.getUsername();
+
+    if (cartUsername == null || !cartUsername.equals(username)) {
+        throw new BadRequestException("Unauthorized access");
+    }
+}
 
 }

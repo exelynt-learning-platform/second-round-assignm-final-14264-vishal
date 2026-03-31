@@ -36,17 +36,14 @@ public class SecurityConfig {
                 throw new UsernameNotFoundException("User not found");
 
             }
-           String role = user.getRole();
+           String role = user.getRole() != null ? user.getRole() : "USER";
 
-if (role == null || role.isBlank()) {
-    role = "ROLE_USER";
+if (role.startsWith("ROLE_")) {
+    role = role.substring(5);
 }
 
-if (!role.startsWith("ROLE_")) {
-    role = "ROLE_" + role;
-}
 
-role = role.replace("ROLE_", "");
+
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getUsername())
                     .password(user.getPassword())
@@ -81,6 +78,8 @@ role = role.replace("ROLE_", "");
                 .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                .requestMatchers("/api/payments/**").authenticated()
+
                 .anyRequest().authenticated());
 
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));

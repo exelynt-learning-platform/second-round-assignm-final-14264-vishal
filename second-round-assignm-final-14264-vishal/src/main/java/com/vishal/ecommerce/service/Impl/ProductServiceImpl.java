@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.vishal.ecommerce.dto.req.ProductReqDto;
 import com.vishal.ecommerce.dto.res.ProductResDto;
 import com.vishal.ecommerce.entity.Product;
+import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.service.ProductService;
@@ -23,11 +24,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResDto addProduct(ProductReqDto request) {
 
+        if (productRepository.findByName(request.getName()) != null) {
+        throw new BadRequestException("Product with same name already exists");
+    }
+
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
+
+        
 
         productRepository.save(product);
 

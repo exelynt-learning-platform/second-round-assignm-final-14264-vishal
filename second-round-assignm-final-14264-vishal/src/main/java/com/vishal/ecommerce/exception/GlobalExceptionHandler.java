@@ -58,6 +58,14 @@ public ResponseEntity<Map<String, Object>> handleOptimisticLocking(Exception ex)
     return new ResponseEntity<>(error, HttpStatus.CONFLICT);
 }
 
+@ExceptionHandler(RuntimeException.class)
+public ResponseEntity<Map<String, Object>> handleRuntime(RuntimeException ex) {
+    logger.error("Runtime error: {}", ex.getMessage(), ex);
+    Map<String, Object> error = new HashMap<>();
+    error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    error.put("message", ex.getMessage());
+    return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+}
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         logger.error("Unexpected error: {}", ex.getMessage(), ex);
