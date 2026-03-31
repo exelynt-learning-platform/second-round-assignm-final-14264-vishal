@@ -39,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CartRepository cartRepository;
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     @Override
     public OrderResDto createOrder(String username, OrderReqDto request) {
 
@@ -58,12 +58,10 @@ public class OrderServiceImpl implements OrderService {
         List<Product> products = new ArrayList<>();
         double total = 0;
 
-        List<?> cartItemsCopy = new ArrayList<>(cart.getItems());
+        List<com.vishal.ecommerce.entity.CartItem> cartItemsCopy =
+        new ArrayList<>(cart.getItems());
 
-
-        for (var obj : cartItemsCopy) {
-
-            var item = (com.vishal.ecommerce.entity.CartItem) obj;
+for (var item : cartItemsCopy) {
 
             Product product = item.getProduct();
 

@@ -25,6 +25,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private JwtUtil jwtUtil;
 
+ private static final int MIN_PASSWORD_LENGTH = 6;
+
+
     @Override
     public UserAuthResDto register(UserRegisterReqDto request) {
 
@@ -41,8 +44,11 @@ public class UserServiceImpl implements UserService {
 
         user.setEmail(request.getEmail());
 
-        if (request.getPassword() == null || request.getPassword().length() < 6) {
-    throw new BadRequestException("Password must be at least 6 characters long");
+
+if (request.getPassword() == null || request.getPassword().length() < MIN_PASSWORD_LENGTH) {
+    throw new BadRequestException(
+        "Password must be at least " + MIN_PASSWORD_LENGTH + " characters long"
+    );
 }
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("ROLE_USER");

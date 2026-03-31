@@ -86,11 +86,8 @@ public class CartServiceImpl implements CartService {
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
 
-        Product product = productRepository.findById(request.getProductId()).orElse(null);
-
-        if (product == null) {
-            throw new ResourceNotFoundException("Product not found");
-        }
+       Product product = productRepository.findById(request.getProductId()).
+       orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         if (product.getStock() < request.getQuantity()) {
             throw new BadRequestException("Not enough stock");
@@ -160,19 +157,23 @@ public class CartServiceImpl implements CartService {
     private void validateCartItemOwnership(CartItem item, String username) {
 
         if (item == null) {
-        throw new BadRequestException("Cart item is null");
-    }
-        Cart cart = item.getCart();
-        if (cart == null) {
-            throw new BadRequestException("Cart item is not associated with any cart");
-        }
-        User user = cart.getUser();
-        if (user == null) {
-            throw new BadRequestException("Cart is not associated with any user");
-        }
-        if (username == null || !username.equals(user.getUsername())) {
-            throw new BadRequestException("You are not authorized to access this cart item");
-        }
+    throw new BadRequestException("Cart item not found");
+}
+
+Cart cart = item.getCart();
+if (cart == null) {
+    throw new BadRequestException("Cart not found");
+}
+
+User user = cart.getUser();
+if (user == null) {
+    throw new BadRequestException("User not found");
+}
+
+String cartUsername = user.getUsername();
+if (cartUsername == null || !cartUsername.equals(username)) {
+    throw new BadRequestException("Unauthorized access");
+}
     }
 
 }

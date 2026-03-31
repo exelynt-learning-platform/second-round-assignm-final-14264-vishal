@@ -5,6 +5,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import java.security.Key;
 import java.util.Date;
@@ -35,6 +36,13 @@ public class JwtUtil {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    @PostConstruct
+public void validateJwtSecret() {
+    if (secret == null || secret.isBlank()) {
+        throw new IllegalStateException("JWT secret is not configured");
+    }
+}
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
