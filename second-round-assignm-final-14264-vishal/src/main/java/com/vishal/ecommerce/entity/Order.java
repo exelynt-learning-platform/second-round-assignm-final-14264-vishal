@@ -3,7 +3,6 @@ package com.vishal.ecommerce.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -29,7 +28,7 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
 @JoinTable(
     name = "order_products",
     joinColumns = @JoinColumn(name = "order_id"),

@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
         UserAuthResDto response = new UserAuthResDto();
         response.setUsername(user.getUsername());
@@ -67,7 +67,7 @@ public class UserServiceImpl implements UserService {
             throw new UnauthorizedException("Wrong password");
         }
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
         UserAuthResDto response = new UserAuthResDto();
         response.setUsername(user.getUsername());

@@ -17,7 +17,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.core.userdetails.User;
 
 @Configuration
 @EnableWebSecurity
@@ -37,13 +36,17 @@ private UserRepository userRepository;
                 throw new UsernameNotFoundException("User not found");
 
         }
-        String role = user.getRole() != null ? user.getRole() : "ROLE_USER";
-String roleWithoutPrefix = role.startsWith("ROLE_") ? role.substring(5) : role;
+        String role = user.getRole();
+        if (role == null || role.isBlank()) {
+                role = "USER"; 
+            } else if (role.startsWith("ROLE_")) {
+                role = role.substring(5);
+            }
 
 return org.springframework.security.core.userdetails.User
         .withUsername(user.getUsername())
         .password(user.getPassword())
-        .roles(roleWithoutPrefix)
+        .roles(role)
         .build();
 
 };

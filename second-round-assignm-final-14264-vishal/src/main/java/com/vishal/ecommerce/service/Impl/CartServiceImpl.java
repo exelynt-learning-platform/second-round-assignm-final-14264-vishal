@@ -54,6 +54,9 @@ public class CartServiceImpl implements CartService{
         double total = 0;
 
         for (CartItem item : cart.getItems()) {
+            if (item.getProduct() == null) {
+        continue;
+    }
             CartItemResDto dto = new CartItemResDto();
             dto.setId(item.getId());
             dto.setProductName(item.getProduct().getName());
@@ -153,11 +156,14 @@ cartItemRepository.delete(item);
     }
 
     private void validateCartItemOwnership(CartItem item, String username) {
-    if (item.getCart() == null || item.getCart().getUser() == null) {
-        throw new BadRequestException("Invalid cart item");
+    if (item.getCart() == null) {
+        throw new BadRequestException("Cart item is not associated with any cart");
+    }
+    if (item.getCart().getUser()== null) {
+        throw new BadRequestException("Cart is not associated with any user");
     }
     if (!item.getCart().getUser().getUsername().equals(username)) {
-        throw new BadRequestException("You are not authorized to access this item");
+        throw new BadRequestException("You are not authorized to access this cart item");
     }
 }
 

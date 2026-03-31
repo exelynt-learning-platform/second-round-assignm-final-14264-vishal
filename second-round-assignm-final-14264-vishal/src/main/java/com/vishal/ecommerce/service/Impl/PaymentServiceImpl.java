@@ -29,9 +29,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     @PostConstruct
 public void validateStripeConfig() {
-    if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
-        logger.warn("Stripe secret key is not configured. Payment features will not work.");
-    }
+    if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
+throw new IllegalStateException(
+            "Stripe secret key is not configured. Set the STRIPE_SECRET_KEY environment variable.");
+        
+        }
+        logger.info("Stripe payment service initialized successfully.");
 }
 
 

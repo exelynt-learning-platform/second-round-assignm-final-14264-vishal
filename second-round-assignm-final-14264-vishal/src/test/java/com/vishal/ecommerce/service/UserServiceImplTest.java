@@ -49,7 +49,7 @@ public class UserServiceImplTest {
         request.setPassword("123456");
 
         when(passwordEncoder.encode("123456")).thenReturn("hashedpassword");
-        when(jwtUtil.generateToken("vishal")).thenReturn("mocktoken");
+        when(jwtUtil.generateToken("vishal", "ROLE_USER")).thenReturn("mocktoken");
 
         UserAuthResDto response = userService.register(request);
 
@@ -71,7 +71,7 @@ public class UserServiceImplTest {
 
         when(userRepository.findByEmail("vishal@gmail.com")).thenReturn(user);
         when(passwordEncoder.matches("123456", "hashedpassword")).thenReturn(true);
-        when(jwtUtil.generateToken("vishal")).thenReturn("mocktoken");
+        when(jwtUtil.generateToken("vishal", null)).thenReturn("mocktoken");
 
         UserAuthResDto response = userService.login(request);
 

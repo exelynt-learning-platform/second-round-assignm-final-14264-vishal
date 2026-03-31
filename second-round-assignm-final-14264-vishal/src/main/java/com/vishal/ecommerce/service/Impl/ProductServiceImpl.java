@@ -1,6 +1,7 @@
 package com.vishal.ecommerce.service.Impl;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,16 +37,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductResDto> getAllProducts() {
 
-        List<Product> products = productRepository.findAll();
-        List<ProductResDto> response = new ArrayList<>();
-
-        for (Product product : products) {
-    response.add(mapToDto(product));
+        return productRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
 }
 
-
-        return response;
-    }
+    
 
     @Override
     public ProductResDto getProductById(Long id) {

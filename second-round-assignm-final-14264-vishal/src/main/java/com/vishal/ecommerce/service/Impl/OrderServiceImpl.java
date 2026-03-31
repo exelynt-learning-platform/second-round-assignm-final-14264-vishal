@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
@@ -39,11 +40,16 @@ private ProductRepository productRepository;
     @Autowired
     private CartRepository cartRepository;
 
-    @Transactional(isolation = org.springframework.transaction.annotation.Isolation.SERIALIZABLE)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
     public OrderResDto createOrder(String username, OrderReqDto request) {
 
         User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
         Cart cart = cartRepository.findByUser(user);
 
         if (cart == null || cart.getItems().isEmpty()) {
@@ -92,7 +98,7 @@ productRepository.save(product);
     @Override
     public OrderResDto getOrderById(String username, Long orderId) {
 
-        Order order = orderRepository.findById(orderId).orElse(null);
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         if (order == null) {
             throw new ResourceNotFoundException("Order not found");
@@ -107,12 +113,7 @@ productRepository.save(product);
         User user = userRepository.findByUsername(username);
         List<Order> orders = orderRepository.findByUser(user);
 
-        List<OrderResDto> response = new ArrayList<>();
-        for (Order order : orders) {
-            response.add(mapToOrderResDto(order));
-        }
-
-        return response;
+        return orders.stream().map(this::mapToOrderResDto).collect(Collectors.toList());
     }
 
     private OrderResDto mapToOrderResDto(Order order) {
