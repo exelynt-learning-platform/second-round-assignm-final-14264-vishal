@@ -37,13 +37,23 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public String createPaymentIntent(Long orderId) throws Exception {
 
+        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
+        throw new IllegalStateException("Stripe API key is not configured");
+    }
+
         Order order = orderRepository.findById(orderId).orElse(null);
 
         if (order == null) {
             throw new ResourceNotFoundException("Order not found");
         }
 
-        Stripe.apiKey = stripeSecretKey;
+        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
+    throw new IllegalStateException("Stripe API key is not configured");
+}
+
+Stripe.apiKey = stripeSecretKey;
+
+
 
         long amount = (long) (order.getTotalPrice() * 100);
 

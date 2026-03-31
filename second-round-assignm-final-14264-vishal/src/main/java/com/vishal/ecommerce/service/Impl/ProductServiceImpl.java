@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.vishal.ecommerce.dto.req.ProductReqDto;
 import com.vishal.ecommerce.dto.res.ProductResDto;
@@ -56,6 +57,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
+
     public ProductResDto updateProduct(Long id, ProductReqDto request) {
 
         Product product = productRepository.findById(id).orElse(null);

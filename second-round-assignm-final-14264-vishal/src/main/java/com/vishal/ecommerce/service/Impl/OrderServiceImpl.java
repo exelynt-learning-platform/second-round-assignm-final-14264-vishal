@@ -58,7 +58,12 @@ public class OrderServiceImpl implements OrderService {
         List<Product> products = new ArrayList<>();
         double total = 0;
 
-        for (var item : cart.getItems()) {
+        List<?> cartItemsCopy = new ArrayList<>(cart.getItems());
+
+
+        for (var obj : cartItemsCopy) {
+
+            var item = (com.vishal.ecommerce.entity.CartItem) obj;
 
             Product product = item.getProduct();
 

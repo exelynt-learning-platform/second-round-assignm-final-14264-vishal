@@ -38,10 +38,12 @@ public class SecurityConfig {
             }
             String role = user.getRole();
             if (role == null || role.isBlank()) {
-                role = "USER";
-            } else if (role.startsWith("ROLE_")) {
-                role = role.substring(5);
-            }
+    role = "USER";
+}
+
+if (role.startsWith("ROLE_")) {
+    role = role.replace("ROLE_", "");
+}
 
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getUsername())

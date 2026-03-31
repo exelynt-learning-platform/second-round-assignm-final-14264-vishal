@@ -40,6 +40,10 @@ public class UserServiceImpl implements UserService {
     user.setUsername(request.getUsername());
 
         user.setEmail(request.getEmail());
+
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+    throw new BadRequestException("Password must be at least 6 characters long");
+}
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("ROLE_USER");
 

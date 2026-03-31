@@ -158,13 +158,19 @@ public class CartServiceImpl implements CartService {
     }
 
     private void validateCartItemOwnership(CartItem item, String username) {
-        if (item.getCart() == null) {
+
+        if (item == null) {
+        throw new BadRequestException("Cart item is null");
+    }
+        Cart cart = item.getCart();
+        if (cart == null) {
             throw new BadRequestException("Cart item is not associated with any cart");
         }
-        if (item.getCart().getUser() == null) {
+        User user = cart.getUser();
+        if (user == null) {
             throw new BadRequestException("Cart is not associated with any user");
         }
-        if (!item.getCart().getUser().getUsername().equals(username)) {
+        if (username == null || !username.equals(user.getUsername())) {
             throw new BadRequestException("You are not authorized to access this cart item");
         }
     }
