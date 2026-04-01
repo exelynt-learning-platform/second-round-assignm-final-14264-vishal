@@ -81,8 +81,9 @@ if (role == null || role.isBlank()) {
                 .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
                 .requestMatchers("/api/payments/**").authenticated()
-
                 .anyRequest().authenticated());
+
+  
 
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
