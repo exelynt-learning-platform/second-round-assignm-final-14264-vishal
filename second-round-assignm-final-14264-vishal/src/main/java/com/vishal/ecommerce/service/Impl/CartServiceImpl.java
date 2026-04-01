@@ -49,33 +49,36 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartResDto mapToCartResDto(Cart cart) {
-        List<CartItemResDto> itemDtos = new ArrayList<>();
-        double total = 0;
 
-        List<CartItem> items = cart.getItems();
+    List<CartItemResDto> itemDtos = new ArrayList<>();
+    double total = 0;
 
-if (items != null) {
-    for (CartItem item : items) {
+    List<CartItem> items = cart.getItems();
+
+    if (items != null) {
+        for (CartItem item : items) {
             if (item.getProduct() == null) {
                 continue;
             }
+
             CartItemResDto dto = new CartItemResDto();
             dto.setId(item.getId());
             dto.setProductName(item.getProduct().getName());
             dto.setPrice(item.getProduct().getPrice());
             dto.setQuantity(item.getQuantity());
+
             total += item.getProduct().getPrice() * item.getQuantity();
             itemDtos.add(dto);
         }
-
-        CartResDto response = new CartResDto();
-        response.setId(cart.getId());
-        response.setItems(itemDtos);
-        response.setTotalPrice(total);
-
-        return response;
     }
-    }
+
+    CartResDto response = new CartResDto();
+    response.setId(cart.getId());
+    response.setItems(itemDtos);
+    response.setTotalPrice(total);
+
+    return response;
+}
     @Override
     @Transactional(readOnly = true)
     public CartResDto getCart(String username) {
