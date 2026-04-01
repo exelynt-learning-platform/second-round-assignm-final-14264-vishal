@@ -41,7 +41,8 @@ public class SecurityConfig {
 
 if (role == null || role.isBlank()) {
     role = "USER";
-} else if (role.startsWith("ROLE_")) {
+} 
+if (role.startsWith("ROLE_")) {
     role = role.substring(5);
 }
 
