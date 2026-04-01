@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -41,16 +42,15 @@ public class SecurityConfig {
 if (role == null || role.isBlank()) {
     role = "USER";
 } else if (role.startsWith("ROLE_")) {
-    role = role.replace("ROLE_", "");
+    role = role.substring(5);
 }
 
 
 
-            return org.springframework.security.core.userdetails.User
-                    .withUsername(user.getUsername())
-                    .password(user.getPassword())
-                    .roles(role)
-                    .build();
+            return User.withUsername(user.getUsername())
+        .password(user.getPassword())
+        .roles(role)
+        .build();
 
         };
     }
