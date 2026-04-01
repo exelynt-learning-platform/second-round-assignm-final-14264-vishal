@@ -52,7 +52,7 @@ public class CartServiceImpl implements CartService {
         List<CartItemResDto> itemDtos = new ArrayList<>();
         double total = 0;
 
-       List<CartItem> items = cart.getItems();
+        List<CartItem> items = cart.getItems();
 
 if (items != null) {
     for (CartItem item : items) {
@@ -75,7 +75,7 @@ if (items != null) {
 
         return response;
     }
-
+    }
     @Override
     @Transactional(readOnly = true)
     public CartResDto getCart(String username) {
