@@ -8,9 +8,6 @@ import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.UnauthorizedException;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.UserService;
-
-import jakarta.annotation.PostConstruct;
-
 import com.vishal.ecommerce.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,17 +29,7 @@ public class UserServiceImpl implements UserService {
 @Value("${app.password.min-length:6}")
 private int minPasswordLength;
 
- @PostConstruct
-    public void createAdmin() {
-        if (userRepository.findByUsername("admin") == null) {
-            User admin = new User();
-            admin.setUsername("admin");
-            admin.setEmail("admin@test.com");
-            admin.setPassword(passwordEncoder.encode("123456"));
-            admin.setRole("ROLE_ADMIN");
-            userRepository.save(admin);
-        }
-    }
+
 
     @Override
     public UserAuthResDto register(UserRegisterReqDto request) {
