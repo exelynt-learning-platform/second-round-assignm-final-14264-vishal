@@ -51,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
 
         Cart cart = cartRepository.findByUser(user);
 
-        if (cart == null || cart.getItems().isEmpty()) {
+        if (cart == null || cart.getItems()== null || cart.getItems().isEmpty()) {
             throw new BadRequestException("Cart is empty");
         }
 
