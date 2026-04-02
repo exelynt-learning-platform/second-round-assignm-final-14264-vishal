@@ -38,19 +38,24 @@ public class CartServiceImpl implements CartService {
     private UserRepository userRepository;
 
     @Transactional
-    private Cart getOrCreateCart(User user) {
-        Cart cart = cartRepository.findByUser(user);
-        if (cart == null) {
-            cart = new Cart();
-            cart.setUser(user);
-            cart.setItems(new ArrayList<>());
-            cartRepository.save(cart);
-        }else if(cart.getItems() == null){
-cart.setItems(new ArrayList<>());
-cartRepository.save(cart);
-        }
-        return cart;
+private Cart getOrCreateCart(User user) {
+Cart cart = cartRepository.findByUserForUpdate(user);
+
+    if (cart == null) {
+        cart = new Cart();
+        cart.setUser(user);
+        cart.setItems(new ArrayList<>());
+        return cartRepository.save(cart);
     }
+
+    if (cart.getItems() == null) {
+        cart.setItems(new ArrayList<>());
+        cart.setItems(new ArrayList<>());
+        return cartRepository.save(cart);
+    }
+
+    return cart;
+}
 
     private CartResDto mapToCartResDto(Cart cart) {
 
@@ -96,38 +101,49 @@ for (CartItem item : items)  {
 @Transactional
 public CartResDto addItem(String username, CartItemReqDto request) {
 
-    synchronized (username.intern()) {
-
-        User user = userRepository.findByUsername(username);
-        Cart cart = getOrCreateCart(user);
-
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-
-        List<CartItem> items = cart.getItems();
-
-        boolean exists = items.stream()
-                .anyMatch(i -> i.getProduct() != null &&
-                        i.getProduct().getId().equals(product.getId()));
-
-        if (exists) {
-            throw new BadRequestException("Product already exists in cart");
-        }
-
-        if (product.getStock() < request.getQuantity()) {
-            throw new BadRequestException("Not enough stock");
-        }
-
-        CartItem item = new CartItem();
-        item.setCart(cart);
-        item.setProduct(product);
-        item.setQuantity(request.getQuantity());
-
-        cartItemRepository.save(item);
-        items.add(item);
-
-        return mapToCartResDto(cart);
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+        throw new ResourceNotFoundException("User not found");
     }
+
+    Cart cart = getOrCreateCart(user);
+
+    Product product = productRepository.findById(request.getProductId())
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+    if (request.getQuantity() == null || request.getQuantity() <= 0) {
+        throw new BadRequestException("Quantity must be greater than zero");
+    }
+
+    if (product.getStock() < request.getQuantity()) {
+        throw new BadRequestException("Not enough stock");
+    }
+
+    List<CartItem> items = cart.getItems();
+    if (items == null) {
+        items = new ArrayList<>();
+        cart.setItems(items);
+    }
+
+    boolean exists = items.stream()
+            .anyMatch(i -> i.getProduct() != null &&
+                    i.getProduct().getId().equals(product.getId()));
+
+    if (exists) {
+        throw new BadRequestException("Product already exists in cart");
+    }
+
+    CartItem item = new CartItem();
+    item.setCart(cart);
+    item.setProduct(product);
+    item.setQuantity(request.getQuantity());
+
+    cartItemRepository.save(item);
+    items.add(item);
+    cartRepository.save(cart);
+
+    return mapToCartResDto(cart);
+
 }
     @Override
     public CartResDto updateItem(String username, Long cartItemId, Integer quantity) {
@@ -174,30 +190,27 @@ public CartResDto addItem(String username, CartItemReqDto request) {
     @Override
 public void clearCart(String username) {
 
-    synchronized (username.intern()) {
+     User user = userRepository.findByUsername(username);
+    if (user == null) {
+        throw new ResourceNotFoundException("User not found");
+    }
 
-        User user = userRepository.findByUsername(username);
-        Cart cart = getOrCreateCart(user);
+    Cart cart = getOrCreateCart(user);
+    cart.getItems().clear();
+    cartRepository.save(cart);
+}
 
-        cart.getItems().clear();
-        cartRepository.save(cart);
+   private void validateCartItemOwnership(CartItem item, String username) {
+
+    if (item == null
+            || item.getCart() == null
+            || item.getCart().getUser() == null
+            || item.getCart().getUser().getUsername() == null) {
+        throw new BadRequestException("Invalid cart item");
+    }
+
+    if (!item.getCart().getUser().getUsername().equals(username)) {
+        throw new BadRequestException("Unauthorized access");
     }
 }
-
-    private void validateCartItemOwnership(CartItem item, String username) {
-
-   if (item == null 
-    || item.getCart() == null 
-    || item.getCart().getUser() == null 
-    || item.getCart().getUser().getUsername() == null) {
-
-    throw new BadRequestException("Invalid cart item ownership");
-}
-
-User user = item.getCart().getUser();
-
-if (!user.getUsername().equals(username)) {
-    throw new BadRequestException("Unauthorized access");
-}
-    }
 }

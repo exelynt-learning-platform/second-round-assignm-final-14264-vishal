@@ -42,16 +42,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
 private Cart getOrCreateCart(User user) {
-    Cart cart = cartRepository.findByUser(user);
+    Cart cart = cartRepository.findByUserForUpdate(user);
 
     if (cart == null) {
         cart = new Cart();
         cart.setUser(user);
         cart.setItems(new ArrayList<>());
-        cart = cartRepository.save(cart);
+        return cartRepository.save(cart);
     }
 
-    // ALWAYS ensure items is initialized
     if (cart.getItems() == null) {
         cart.setItems(new ArrayList<>());
         cart = cartRepository.save(cart);
@@ -59,89 +58,85 @@ private Cart getOrCreateCart(User user) {
 
     return cart;
 }
-    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
-    @Override
-    public OrderResDto createOrder(String username, OrderReqDto request) {
+   @Override
+@Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+public OrderResDto createOrder(String username, OrderReqDto request) {
 
-    synchronized (username.intern()) {
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+        throw new ResourceNotFoundException("User not found: " + username);
+    }
 
-        User user = userRepository.findByUsername(username);
-        
+    Cart cart = getOrCreateCart(user);
 
-        if (user == null) {
-            throw new ResourceNotFoundException("User not found: " + username);
-        }
-
-        Cart cart = getOrCreateCart(user);
-
-        List<CartItem> items = cart.getItems();
-
-if (items.isEmpty()) {
-    throw new BadRequestException("Cart is empty");
-}
+    List<CartItem> items = cart.getItems();
+    if (items == null || items.isEmpty()) {
+        throw new BadRequestException("Cart is empty");
+    }
 
     List<CartItem> cartItemsCopy = new ArrayList<>(items);
 
+    List<Product> products = new ArrayList<>();
+    double total = 0;
 
-        
-   
+    for (CartItem item : cartItemsCopy) {
+        Product product = item.getProduct();
 
-        List<Product> products = new ArrayList<>();
-        double total = 0;
-
-
-for (CartItem item : cartItemsCopy) {
-
-            Product product = item.getProduct();
-
-            if (product == null) {
-                throw new ResourceNotFoundException("Product not found in cart item");
-            }
-
-            if (product.getStock() < item.getQuantity()) {
-                throw new BadRequestException("Not enough stock for product: " + product.getName());
-            }
-
-            product.setStock(product.getStock() - item.getQuantity());
-            productRepository.save(product);
-
-            products.add(product);
-            total += product.getPrice() * item.getQuantity();
+        if (product == null) {
+            throw new ResourceNotFoundException("Product not found in cart item");
         }
 
-        Order order = new Order();
-        order.setUser(user);
-        order.setProducts(products);
-        order.setTotalPrice(total);
-        order.setShippingAddress(request.getShippingAddress());
-        order.setPaymentStatus("PENDING");
-        order.setCreatedAt(LocalDateTime.now());
+        if (product.getStock() < item.getQuantity()) {
+            throw new BadRequestException("Not enough stock for product: " + product.getName());
+        }
 
-        orderRepository.save(order);
+        product.setStock(product.getStock() - item.getQuantity());
+        productRepository.save(product);
 
-cart.getItems().clear();
-  cartRepository.save(cart);
-
-        return mapToOrderResDto(order);
+        products.add(product);
+        total += product.getPrice() * item.getQuantity();
     }
+
+    Order order = new Order();
+    order.setUser(user);
+    order.setProducts(products);
+    order.setTotalPrice(total);
+    order.setShippingAddress(request.getShippingAddress());
+    order.setPaymentStatus("PENDING");
+    order.setCreatedAt(LocalDateTime.now());
+
+    orderRepository.save(order);
+
+    cart.getItems().clear();
+    cartRepository.save(cart);
+
+    return mapToOrderResDto(order);
 }
+   @Override
+public OrderResDto getOrderById(String username, Long orderId) {
 
-    @Override
-    public OrderResDto getOrderById(String username, Long orderId) {
+    Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-
-        return mapToOrderResDto(order);
+    if (order.getUser() == null
+            || order.getUser().getUsername() == null
+            || !order.getUser().getUsername().equals(username)) {
+        throw new BadRequestException("Unauthorized access");
     }
+
+    return mapToOrderResDto(order);
+}
 
     @Override
     public List<OrderResDto> getAllOrders(String username) {
 
         User user = userRepository.findByUsername(username);
-        List<Order> orders = orderRepository.findByUser(user);
+         if (user == null) {
+        throw new ResourceNotFoundException("User not found");
+    }
 
-        return orders.stream().map(this::mapToOrderResDto).collect(Collectors.toList());
+    List<Order> orders = orderRepository.findByUser(user);
+    return orders.stream().map(this::mapToOrderResDto).collect(Collectors.toList());
     }
 
     private OrderResDto mapToOrderResDto(Order order) {
