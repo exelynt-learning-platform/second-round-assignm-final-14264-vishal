@@ -12,11 +12,19 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(length = 1000)
     private String description;
 
     private Double price;
 
-    private Integer stock;
+    @Column(name = "stock_quantity")
+    private Integer stockQuantity;
+
+    private String imageUrl;
+
+        public Product() {}
+
 }

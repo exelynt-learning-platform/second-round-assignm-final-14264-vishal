@@ -1,5 +1,7 @@
 package com.vishal.ecommerce.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -8,7 +10,7 @@ import lombok.Data;
 @Table(name = "users")
 public class User {
 
-    @Id
+     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -21,5 +23,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role;
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

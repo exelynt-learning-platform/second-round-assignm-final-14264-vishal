@@ -5,107 +5,59 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.vishal.ecommerce.dto.req.ProductReqDto;
 import com.vishal.ecommerce.dto.res.ProductResDto;
 import com.vishal.ecommerce.entity.Product;
-import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.service.ProductService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;
 
     @Override
-    public ProductResDto addProduct(ProductReqDto request) {
-
-        if (productRepository.findByName(request.getName()) != null) {
-        throw new BadRequestException("Product with same name already exists");
+    public List<ProductResDto> getAllProducts() {
+        return productRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
+    @Override
+    public ProductResDto getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        return convertToDto(product);
+    }
+
+    @Override
+    public ProductResDto createProduct(ProductReqDto request) {
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
-        product.setStock(request.getStock());
+        product.setStockQuantity(request.getStockQuantity());
+        product.setImageUrl(request.getImageUrl());
 
-        
-
-        productRepository.save(product);
-
-        return mapToDto(product);
-
+        Product saved = productRepository.save(product);
+        return convertToDto(saved);
     }
 
-    @Override
-    public List<ProductResDto> getAllProducts() {
-
-        return productRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
-}
-
-    
-
-    @Override
-    public ProductResDto getProductById(Long id) {
-
-        Product product = productRepository.findById(id).orElse(null);
-
-        if (product == null) {
-            throw new ResourceNotFoundException("Product not found");
-        }
-
-        return mapToDto(product);
-
+    private ProductResDto convertToDto(Product product) {
+        return new ProductResDto(
+            product.getId(),
+            product.getName(),
+            product.getDescription(),
+            product.getPrice(),
+            product.getStockQuantity(),
+            product.getImageUrl()
+        );
     }
-
-    @Override
-    @Transactional
-
-    public ProductResDto updateProduct(Long id, ProductReqDto request) {
-
-        Product product = productRepository.findById(id).orElse(null);
-
-        if (product == null) {
-            throw new ResourceNotFoundException("Product not found");
-        }
-
-        product.setName(request.getName());
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        product.setStock(request.getStock());
-
-        productRepository.save(product);
-
-        return mapToDto(product);
-
-    }
-
-    @Override
-    public void deleteProduct(Long id) {
-
-        Product product = productRepository.findById(id).orElse(null);
-
-        if (product == null) {
-            throw new ResourceNotFoundException("Product not found");
-        }
-
-        productRepository.delete(product);
-    }
-
-    private ProductResDto mapToDto(Product product) {
-    ProductResDto dto = new ProductResDto();
-    dto.setId(product.getId());
-    dto.setName(product.getName());
-    dto.setDescription(product.getDescription());
-    dto.setPrice(product.getPrice());
-    dto.setStock(product.getStock());
-    return dto;
-}
-
     
 }

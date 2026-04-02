@@ -7,15 +7,13 @@ import java.util.*;
 
 public interface ProductService {
 
-        ProductResDto addProduct(ProductReqDto request);
 
             List<ProductResDto> getAllProducts();
 
                 ProductResDto getProductById(Long id);
 
-                    ProductResDto updateProduct(Long id, ProductReqDto request);
+                    ProductResDto createProduct(ProductReqDto request);
 
-                        void deleteProduct(Long id);
 
 
 }
