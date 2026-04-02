@@ -48,18 +48,22 @@ private Cart getOrCreateCart(User user) {
         cart = new Cart();
         cart.setUser(user);
         cart.setItems(new ArrayList<>());
-        cartRepository.save(cart);
-    } else if (cart.getItems() == null) {
+        cart = cartRepository.save(cart);
+    }
+
+    // ALWAYS ensure items is initialized
+    if (cart.getItems() == null) {
         cart.setItems(new ArrayList<>());
-        cartRepository.save(cart);
+        cart = cartRepository.save(cart);
     }
 
     return cart;
 }
-
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     @Override
     public OrderResDto createOrder(String username, OrderReqDto request) {
+
+    synchronized (username.intern()) {
 
         User user = userRepository.findByUsername(username);
         
@@ -120,6 +124,7 @@ cart.getItems().clear();
 
         return mapToOrderResDto(order);
     }
+}
 
     @Override
     public OrderResDto getOrderById(String username, Long orderId) {

@@ -93,24 +93,26 @@ for (CartItem item : items)  {
     }
 
     @Override
-    @Transactional
-    public CartResDto addItem(String username, CartItemReqDto request) {
+@Transactional
+public CartResDto addItem(String username, CartItemReqDto request) {
+
+    synchronized (username.intern()) {
+
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
 
-       Product product = productRepository.findById(request.getProductId()).
-       orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        Product product = productRepository.findById(request.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-List<CartItem> items = cart.getItems();
+        List<CartItem> items = cart.getItems();
 
+        boolean exists = items.stream()
+                .anyMatch(i -> i.getProduct() != null &&
+                        i.getProduct().getId().equals(product.getId()));
 
-boolean exists = items.stream()
-        .anyMatch(i -> i.getProduct() != null &&
-                i.getProduct().getId().equals(product.getId()));
-
-if (exists) {
-    throw new BadRequestException("Product already exists in cart");
-}
+        if (exists) {
+            throw new BadRequestException("Product already exists in cart");
+        }
 
         if (product.getStock() < request.getQuantity()) {
             throw new BadRequestException("Not enough stock");
@@ -122,10 +124,11 @@ if (exists) {
         item.setQuantity(request.getQuantity());
 
         cartItemRepository.save(item);
-items.add(item);
+        items.add(item);
+
         return mapToCartResDto(cart);
     }
-
+}
     @Override
     public CartResDto updateItem(String username, Long cartItemId, Integer quantity) {
         CartItem item = cartItemRepository.findById(cartItemId).orElse(null);
@@ -169,13 +172,17 @@ items.add(item);
     }
 
     @Override
-    public void clearCart(String username) {
+public void clearCart(String username) {
+
+    synchronized (username.intern()) {
+
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
-cart.getItems().clear();
-cartRepository.save(cart);     
-    cartRepository.save(cart);
+
+        cart.getItems().clear();
+        cartRepository.save(cart);
     }
+}
 
     private void validateCartItemOwnership(CartItem item, String username) {
 
