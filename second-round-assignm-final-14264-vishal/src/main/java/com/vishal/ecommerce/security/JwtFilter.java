@@ -43,11 +43,11 @@ if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
 
         if (jwtUtil.isTokenValid(token)) {
     String username = jwtUtil.extractUsername(token);
-    String role = jwtUtil.extractRole(token);
+String role = jwtUtil.extractRole(token);
     if (role == null || role.isBlank()) {
                 role = "ROLE_USER";
             } else if (!role.startsWith("ROLE_")) {
-                role = "ROLE_" + role;
+                role = "ROLE_" + role.toUpperCase();
             }
     List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
     UsernamePasswordAuthenticationToken authentication =

@@ -42,10 +42,11 @@ public class SecurityConfig {
 if (role == null || role.isBlank()) {
     role = "USER";
 } 
-if (role.startsWith("ROLE_")) {
-    role = role.substring(5);
+role = role.toUpperCase();
+if (!role.equals("USER") && !role.equals("ADMIN")) {
+    throw new IllegalArgumentException("Invalid role");
 }
-
+    
 
 
             return User.withUsername(user.getUsername())

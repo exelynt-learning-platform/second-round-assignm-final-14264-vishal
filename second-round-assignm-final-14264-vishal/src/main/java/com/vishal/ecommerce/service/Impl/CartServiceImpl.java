@@ -57,25 +57,22 @@ List<CartItem> items = cart.getItems();
 
 if (items == null) {
     items = new ArrayList<>();
-    cart.setItems(items);
 }
-    if (items != null) {
-        for (CartItem item : items) {
-            if (item.getProduct() == null) {
-                continue;
-            }
 
-            CartItemResDto dto = new CartItemResDto();
-            dto.setId(item.getId());
-            dto.setProductName(item.getProduct().getName());
-            dto.setPrice(item.getProduct().getPrice());
-            dto.setQuantity(item.getQuantity());
+for (CartItem item : items) {
+        if (item.getProduct() == null) continue;
 
-            total += item.getProduct().getPrice() * item.getQuantity();
-            itemDtos.add(dto);
-        }
+        CartItemResDto dto = new CartItemResDto();
+        dto.setId(item.getId());
+        dto.setProductName(item.getProduct().getName());
+        dto.setPrice(item.getProduct().getPrice());
+        dto.setQuantity(item.getQuantity());
+
+        total += item.getProduct().getPrice() * item.getQuantity();
+        itemDtos.add(dto);
     }
 
+    
     CartResDto response = new CartResDto();
     response.setId(cart.getId());
     response.setItems(itemDtos);
@@ -106,7 +103,7 @@ if (items == null) {
     items = new ArrayList<>();
     cart.setItems(items);
 }
-boolean exists = items != null && items.stream()
+boolean exists = items.stream()
         .anyMatch(i -> i.getProduct() != null &&
                 i.getProduct().getId().equals(product.getId()));
 

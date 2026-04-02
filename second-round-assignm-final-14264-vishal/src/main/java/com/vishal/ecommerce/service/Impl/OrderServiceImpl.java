@@ -45,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResDto createOrder(String username, OrderReqDto request) {
 
         User user = userRepository.findByUsername(username);
+        
 
         if (user == null) {
             throw new ResourceNotFoundException("User not found: " + username);
@@ -52,17 +53,19 @@ public class OrderServiceImpl implements OrderService {
 
         Cart cart = cartRepository.findByUser(user);
 
-        List<CartItem> cartItems = (cart != null) ? cart.getItems() : null;
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+        throw new BadRequestException("Cart is empty");
+    }
+
+    List<CartItem> cartItemsCopy = new ArrayList<>(cart.getItems());
+
 
         
-       if (cart == null || cartItems == null || cartItems.isEmpty()) {
-    throw new BadRequestException("Cart is empty");
-}
+   
 
         List<Product> products = new ArrayList<>();
         double total = 0;
 
-        List<CartItem> cartItemsCopy = new ArrayList<>(cartItems);
 
 for (CartItem item : cartItemsCopy) {
 
@@ -95,7 +98,8 @@ for (CartItem item : cartItemsCopy) {
 
 if (cart.getItems() != null) {
     cart.getItems().clear();
-}        cartRepository.save(cart);
+}
+  cartRepository.save(cart);
 
         return mapToOrderResDto(order);
     }
