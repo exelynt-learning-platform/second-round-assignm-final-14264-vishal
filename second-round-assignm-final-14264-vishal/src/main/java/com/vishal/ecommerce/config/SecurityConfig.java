@@ -52,7 +52,6 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Parse and validate allowed origins – never use "*" in production
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(origin -> origin.startsWith("http://") || origin.startsWith("https://"))
@@ -75,6 +74,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // CSRF is disabled because this is a stateless REST API using JWT tokens.
+            // The JWT is stored in the Authorization header, which is not vulnerable to CSRF attacks.
+            // For browser-based clients, CSRF protection would be needed, but this API serves mobile/SPA.
+            // CORS is configured to restrict allowed origins.
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

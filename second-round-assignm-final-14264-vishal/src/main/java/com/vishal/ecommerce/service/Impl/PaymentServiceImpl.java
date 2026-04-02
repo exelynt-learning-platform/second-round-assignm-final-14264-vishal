@@ -35,6 +35,9 @@ public class PaymentServiceImpl implements PaymentService {
     // Simple in-memory cache for processed webhook event IDs (for replay protection)
     private final Set<String> processedEventIds = new HashSet<>();
 
+    // Maximum allowed webhook payload size (1 MB)
+    private static final int MAX_PAYLOAD_SIZE = 1024 * 1024;
+
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
 
@@ -91,6 +94,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void handleWebhook(String payload, String sigHeader) {
+        // Validate payload size to prevent DoS
+        if (payload == null || payload.length() > MAX_PAYLOAD_SIZE) {
+            throw new BadRequestException("Invalid webhook payload size");
+        }
+
         String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
         if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
             throw new BadRequestException("Webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.");
@@ -105,12 +113,12 @@ public class PaymentServiceImpl implements PaymentService {
                 return;
             }
 
-            // Optional: timestamp validation (reject events older than 5 minutes)
+            // Timestamp validation (reject events older than 5 minutes)
             long eventTimestamp = event.getCreated();
             long now = Instant.now().getEpochSecond();
             if (now - eventTimestamp > 300) {
                 System.out.println("Webhook event too old: " + eventId);
-                return; // or throw exception depending on requirements
+                return;
             }
 
             if ("payment_intent.succeeded".equals(event.getType()) || "payment_intent.payment_failed".equals(event.getType())) {
@@ -141,7 +149,6 @@ public class PaymentServiceImpl implements PaymentService {
 
             // Mark event as processed
             processedEventIds.add(eventId);
-            // Optional: clean up old event IDs to avoid memory leak (simple size cap)
             if (processedEventIds.size() > 10000) {
                 processedEventIds.clear();
             }
