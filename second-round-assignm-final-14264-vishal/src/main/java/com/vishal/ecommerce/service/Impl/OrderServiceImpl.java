@@ -1,12 +1,9 @@
 package com.vishal.ecommerce.service.Impl;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
@@ -25,7 +22,6 @@ import com.vishal.ecommerce.repository.CartItemRepository;
 import com.vishal.ecommerce.repository.CartRepository;
 import com.vishal.ecommerce.repository.OrderItemRepository;
 import com.vishal.ecommerce.repository.OrderRepository;
-import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 import com.vishal.ecommerce.service.OrderService;
@@ -35,19 +31,14 @@ public class OrderServiceImpl implements OrderService {
 
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final CartService cartService;
 
     public OrderServiceImpl(UserRepository userRepository, CartRepository cartRepository,
-                            CartItemRepository cartItemRepository, OrderRepository orderRepository,
-                            OrderItemRepository orderItemRepository, CartService cartService) {
+                            OrderRepository orderRepository, CartService cartService) {
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
-        this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
         this.cartService = cartService;
     }
 
@@ -64,7 +55,6 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Cannot create order from empty cart");
         }
 
-        // Calculate total and create order
         double total = 0.0;
         Order order = new Order();
         order.setUser(user);
@@ -75,15 +65,12 @@ public class OrderServiceImpl implements OrderService {
             Product product = cartItem.getProduct();
             int qty = cartItem.getQuantity();
 
-            // Check stock again
             if (product.getStockQuantity() < qty) {
                 throw new BadRequestException("Insufficient stock for product: " + product.getName());
             }
 
-            // Update stock
             product.setStockQuantity(product.getStockQuantity() - qty);
 
-            // Create order item
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setProductName(product.getName());
@@ -97,7 +84,6 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalPrice(total);
         Order savedOrder = orderRepository.save(order);
 
-        // Clear cart
         cartService.clearCart(username);
 
         return convertToDto(savedOrder);

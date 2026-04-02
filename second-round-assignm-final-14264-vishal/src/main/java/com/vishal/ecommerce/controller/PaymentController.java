@@ -2,42 +2,48 @@ package com.vishal.ecommerce.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.stripe.exception.StripeException;
+import com.vishal.ecommerce.dto.req.PaymentIntentReqDto;
+import com.vishal.ecommerce.dto.res.PaymentIntentResDto;
 import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.service.PaymentService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/payments")
 
 public class PaymentController {
 
-    @Autowired
-    private PaymentService paymentService;
+    private final PaymentService paymentService;
 
-    @PostMapping("/create-intent/{orderId}")
-public ResponseEntity<String> createPaymentIntent(@PathVariable Long orderId) {
-    try {
-        String clientSecret = paymentService.createPaymentIntent(orderId);
-        return ResponseEntity.ok(clientSecret);
-    } catch (ResourceNotFoundException e) {
-        return ResponseEntity.status(404).body(e.getMessage());
-    } catch (IllegalStateException e) {
-        return ResponseEntity.status(500).body("Payment service not configured");
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body("Payment processing failed");
+    public PaymentController(PaymentService paymentService) {
+        this.paymentService = paymentService;
     }
-}
 
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
 
-    @PostMapping("/update-status/{orderId}")
-public ResponseEntity<String> updatePaymentStatus(@PathVariable Long orderId, @RequestParam String status) {
-    paymentService.updatePaymentStatus(orderId, status);
-    return ResponseEntity.ok("Payment status updated to " + status);
-}
+    @PostMapping("/create-intent")
+    public ResponseEntity<PaymentIntentResDto> createPaymentIntent(@Valid @RequestBody PaymentIntentReqDto request) throws StripeException {
+        String username = getCurrentUsername();
+        return ResponseEntity.ok(paymentService.createPaymentIntent(request, username));
+    }
+
+    @PostMapping("/webhook")
+    public ResponseEntity<String> handleWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
+        paymentService.handleWebhook(payload, sigHeader);
+        return ResponseEntity.ok("Webhook received");
+    }
     
 }

@@ -3,13 +3,22 @@ package com.vishal.ecommerce.service.Impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
+import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.vishal.ecommerce.dto.req.PaymentIntentReqDto;
+import com.vishal.ecommerce.dto.res.PaymentIntentResDto;
 import com.vishal.ecommerce.entity.Order;
+import com.vishal.ecommerce.entity.User;
+import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.OrderRepository;
+import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.PaymentService;
 
 import jakarta.annotation.PostConstruct;
@@ -17,66 +26,84 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PaymentServiceImpl.class);
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
 
-    @Autowired
-    private OrderRepository orderRepository;
+    public PaymentServiceImpl(OrderRepository orderRepository, UserRepository userRepository) {
+        this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
+    }
 
     @PostConstruct
-    public void validateStripeConfig() {
-        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
-            logger.warn("Stripe secret key is not configured. Payment features will not work.");
-        } else {
-            logger.info("Stripe payment service initialized successfully.");
-        }
+    public void init() {
+        Stripe.apiKey = stripeSecretKey;
     }
 
     @Override
-    public String createPaymentIntent(Long orderId) throws Exception {
+    public PaymentIntentResDto createPaymentIntent(PaymentIntentReqDto request, String username) throws com.stripe.exception.StripeException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (stripeSecretKey == null || stripeSecretKey.isBlank()) {
-        throw new IllegalStateException("Stripe API key is not configured");
-    }
+        Order order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        Order order = orderRepository.findById(orderId).orElse(null);
-
-        if (order == null) {
-            throw new ResourceNotFoundException("Order not found");
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("You are not authorized to pay for this order");
         }
-
-        
-
-
-Stripe.apiKey = stripeSecretKey;
-
-
 
         long amount = (long) (order.getTotalPrice() * 100);
 
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(amount)
                 .setCurrency("usd")
+                .setAmount(amount)
+                .setDescription("Order #" + order.getId())
+                .putMetadata("orderId", order.getId().toString())
                 .build();
 
-        PaymentIntent intent = PaymentIntent.create(params);
+        PaymentIntent paymentIntent = PaymentIntent.create(params);
 
-        return intent.getClientSecret();
+        return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
     }
 
     @Override
-    public void updatePaymentStatus(Long orderId, String status) {
+@Transactional
+public void handleWebhook(String payload, String sigHeader) {
+    try {
+        String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
+        if (webhookSecret == null) {
+            webhookSecret = ""; // fallback, but you should set it
+        }
+        Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
 
-        Order order = orderRepository.findById(orderId).orElse(null);
+        if ("payment_intent.succeeded".equals(event.getType())) {
+            PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
+            String orderIdStr = paymentIntent.getMetadata().get("orderId");
+            Long orderId = Long.parseLong(orderIdStr);
 
-        if (order == null) {
-            throw new ResourceNotFoundException("Order not found");
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
+            order.setPaymentStatus("PAID");
+            orderRepository.save(order);
         }
 
-        order.setPaymentStatus(status);
-        orderRepository.save(order);
+        if ("payment_intent.payment_failed".equals(event.getType())) {
+            PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
+            String orderIdStr = paymentIntent.getMetadata().get("orderId");
+            Long orderId = Long.parseLong(orderIdStr);
+
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
+            order.setPaymentStatus("FAILED");
+            orderRepository.save(order);
+        }
+    } catch (SignatureVerificationException e) {
+        throw new BadRequestException("Invalid webhook signature");
+    } catch (Exception e) {
+        throw new RuntimeException("Webhook processing error: " + e.getMessage());
     }
+}
 
 }
