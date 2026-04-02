@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConfigValidation {
 
-    @Value("${jwt.secret}")  // No colon – property must exist
-    private String jwtSecret;
+    @Value("${jwt.secret}")
+private String jwtSecret;
 
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;

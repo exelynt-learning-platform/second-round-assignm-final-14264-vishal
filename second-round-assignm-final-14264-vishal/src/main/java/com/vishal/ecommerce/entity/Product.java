@@ -26,23 +26,62 @@ public class Product {
     @Version
     private Integer version;
 
-    public Product() {}
+    public Product() {
+    }
 
-    // Getters
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public Double getPrice() { return price; }
-    public Integer getStockQuantity() { return stockQuantity; }
-    public String getImageUrl() { return imageUrl; }
-    public Integer getVersion() { return version; }
+    public Long getId() {
+        return id;
+    }
 
-    // Setters
-    public void setId(Long id) { this.id = id; }
-    public void setName(String name) { this.name = name; }
-    public void setDescription(String description) { this.description = description; }
-    public void setPrice(Double price) { this.price = price; }
-    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-    public void setVersion(Integer version) { this.version = version; }
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 }

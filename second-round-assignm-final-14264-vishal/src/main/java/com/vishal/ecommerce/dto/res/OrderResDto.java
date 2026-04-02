@@ -3,7 +3,7 @@ package com.vishal.ecommerce.dto.res;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.vishal.ecommerce.dto.req.OrderItemResDto;
+import com.vishal.ecommerce.dto.res.OrderItemResDto;
 
 import lombok.Data;
 

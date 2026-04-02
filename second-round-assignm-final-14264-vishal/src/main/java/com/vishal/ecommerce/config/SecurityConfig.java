@@ -29,7 +29,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final CustomUserDetailsService customUserDetailsService;
 
-    @Value("${cors.allowed.origins")
+    @Value("${cors.allowed.origins}")
     private String allowedOrigins;
 
     public SecurityConfig(JwtFilter jwtFilter, CustomUserDetailsService customUserDetailsService) {
@@ -54,8 +54,8 @@ public class SecurityConfig {
         List<String> origins = Arrays.asList(allowedOrigins.split(","));
         configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+ configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Stripe-Signature"));
+         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

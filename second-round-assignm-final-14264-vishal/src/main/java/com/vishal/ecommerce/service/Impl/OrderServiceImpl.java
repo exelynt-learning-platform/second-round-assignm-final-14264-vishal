@@ -1,9 +1,10 @@
 package com.vishal.ecommerce.service.Impl;
 
+import jakarta.validation.ValidationException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.validation.ValidationException;  // <-- Added missing import
 
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
