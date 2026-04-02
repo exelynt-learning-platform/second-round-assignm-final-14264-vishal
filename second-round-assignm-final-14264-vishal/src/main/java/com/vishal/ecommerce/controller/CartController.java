@@ -1,6 +1,5 @@
 package com.vishal.ecommerce.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.vishal.ecommerce.dto.req.CartItemReqDto;
@@ -19,16 +17,14 @@ import com.vishal.ecommerce.dto.res.CartResDto;
 import com.vishal.ecommerce.service.CartService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/cart")
+@RequiredArgsConstructor
 public class CartController {
 
     private final CartService cartService;
-
-    public CartController(CartService cartService) {
-        this.cartService = cartService;
-    }
 
     private String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -36,25 +32,21 @@ public class CartController {
 
     @GetMapping
     public ResponseEntity<CartResDto> getCart() {
-        String username = getCurrentUsername();
-        return ResponseEntity.ok(cartService.getCart(username));
+        return ResponseEntity.ok(cartService.getCart(getCurrentUsername()));
     }
 
     @PostMapping("/items")
     public ResponseEntity<CartResDto> addItem(@Valid @RequestBody CartItemReqDto request) {
-        String username = getCurrentUsername();
-        return ResponseEntity.ok(cartService.addItemToCart(username, request));
+        return ResponseEntity.ok(cartService.addItemToCart(getCurrentUsername(), request));
     }
 
     @PutMapping("/items/{itemId}")
     public ResponseEntity<CartResDto> updateItem(@PathVariable Long itemId, @RequestParam Integer quantity) {
-        String username = getCurrentUsername();
-        return ResponseEntity.ok(cartService.updateCartItem(username, itemId, quantity));
+        return ResponseEntity.ok(cartService.updateCartItem(getCurrentUsername(), itemId, quantity));
     }
 
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<CartResDto> removeItem(@PathVariable Long itemId) {
-        String username = getCurrentUsername();
-        return ResponseEntity.ok(cartService.removeCartItem(username, itemId));
+        return ResponseEntity.ok(cartService.removeCartItem(getCurrentUsername(), itemId));
     }
 }

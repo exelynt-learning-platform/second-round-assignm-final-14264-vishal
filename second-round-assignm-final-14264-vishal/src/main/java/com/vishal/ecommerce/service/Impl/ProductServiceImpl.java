@@ -20,36 +20,16 @@ import lombok.RequiredArgsConstructor;
 
 public class ProductServiceImpl implements ProductService {
 
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
-    @Override
+  
+ @Override
     public List<ProductResDto> getAllProducts() {
         return productRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
-
-    @Override
-public ProductResDto updateProduct(Long id, ProductReqDto request) {
-    Product product = productRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-    product.setName(request.getName());
-    product.setDescription(request.getDescription());
-    product.setPrice(request.getPrice());
-    product.setStockQuantity(request.getStockQuantity());
-    product.setImageUrl(request.getImageUrl());
-    Product updated = productRepository.save(product);
-    return convertToDto(updated);
-}
-
-@Override
-public void deleteProduct(Long id) {
-    if (!productRepository.existsById(id)) {
-        throw new ResourceNotFoundException("Product not found with id: " + id);
-    }
-    productRepository.deleteById(id);
-}
     @Override
     public ProductResDto getProductById(Long id) {
         Product product = productRepository.findById(id)
@@ -65,19 +45,39 @@ public void deleteProduct(Long id) {
         product.setPrice(request.getPrice());
         product.setStockQuantity(request.getStockQuantity());
         product.setImageUrl(request.getImageUrl());
-
         Product saved = productRepository.save(product);
         return convertToDto(saved);
     }
 
+    @Override
+    public ProductResDto updateProduct(Long id, ProductReqDto request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setStockQuantity(request.getStockQuantity());
+        product.setImageUrl(request.getImageUrl());
+        Product updated = productRepository.save(product);
+        return convertToDto(updated);
+    }
+
+    @Override
+    public void deleteProduct(Long id) {
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found with id: " + id);
+        }
+        productRepository.deleteById(id);
+    }
+
     private ProductResDto convertToDto(Product product) {
         return new ProductResDto(
-            product.getId(),
-            product.getName(),
-            product.getDescription(),
-            product.getPrice(),
-            product.getStockQuantity(),
-            product.getImageUrl()
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStockQuantity(),
+                product.getImageUrl()
         );
     }
     

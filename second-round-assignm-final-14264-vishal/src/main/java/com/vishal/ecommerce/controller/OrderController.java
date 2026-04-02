@@ -2,10 +2,8 @@ package com.vishal.ecommerce.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,16 +17,14 @@ import com.vishal.ecommerce.dto.res.OrderResDto;
 import com.vishal.ecommerce.service.OrderService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
     private final OrderService orderService;
-
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
-    }
 
     private String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -36,21 +32,16 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderResDto> createOrder(@Valid @RequestBody OrderReqDto request) {
-        String username = getCurrentUsername();
-        OrderResDto order = orderService.createOrder(username, request);
-        return new ResponseEntity<>(order, HttpStatus.CREATED);
+        return new ResponseEntity<>(orderService.createOrder(getCurrentUsername(), request), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResDto> getOrderById(@PathVariable Long id) {
-        String username = getCurrentUsername();
-        return ResponseEntity.ok(orderService.getOrderById(username, id));
+        return ResponseEntity.ok(orderService.getOrderById(getCurrentUsername(), id));
     }
 
     @GetMapping
     public ResponseEntity<List<OrderResDto>> getAllOrders() {
-        String username = getCurrentUsername();
-        return ResponseEntity.ok(orderService.getAllOrdersForUser(username));
+        return ResponseEntity.ok(orderService.getAllOrdersForUser(getCurrentUsername()));
     }
-    
 }

@@ -25,9 +25,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ProductController {
     
-    private final ProductService productService;
-
-  
+     private final ProductService productService;
 
     @GetMapping
     public ResponseEntity<List<ProductResDto>> getAllProducts() {
