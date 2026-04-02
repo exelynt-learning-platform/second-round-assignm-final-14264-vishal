@@ -32,10 +32,10 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
 
-    // Simple in-memory cache for processed webhook event IDs (for replay protection)
+    // In-memory cache for processed webhook event IDs (replay protection)
     private final Set<String> processedEventIds = new HashSet<>();
 
-    // Maximum allowed webhook payload size (1 MB)
+    // Maximum allowed webhook payload size (1 MB) to prevent DoS
     private static final int MAX_PAYLOAD_SIZE = 1024 * 1024;
 
     @Value("${stripe.secret.key}")
@@ -47,11 +47,16 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @PostConstruct
-    public void validateStripeKey() {
+    public void initStripe() {
+        // Validate Stripe API key format and existence
         if (stripeSecretKey == null || stripeSecretKey.trim().isEmpty()) {
             throw new IllegalStateException("Stripe secret key is not configured. Please set STRIPE_SECRET_KEY environment variable.");
         }
-        Stripe.apiKey = stripeSecretKey;
+        String trimmedKey = stripeSecretKey.trim();
+        if (!trimmedKey.startsWith("sk_test_") && !trimmedKey.startsWith("sk_live_")) {
+            throw new IllegalStateException("Invalid Stripe secret key format. Key must start with 'sk_test_' or 'sk_live_'.");
+        }
+        Stripe.apiKey = trimmedKey;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -94,7 +99,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void handleWebhook(String payload, String sigHeader) {
-        // Validate payload size to prevent DoS
+        // Validate payload size to prevent DoS attacks
         if (payload == null || payload.length() > MAX_PAYLOAD_SIZE) {
             throw new BadRequestException("Invalid webhook payload size");
         }
@@ -103,17 +108,19 @@ public class PaymentServiceImpl implements PaymentService {
         if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
             throw new BadRequestException("Webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.");
         }
+
         try {
+            // Stripe signature verification provides authentication – no additional auth needed
             Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
 
-            // Replay protection: reject if event already processed
+            // Replay protection: reject already processed events
             String eventId = event.getId();
             if (processedEventIds.contains(eventId)) {
                 System.out.println("Duplicate webhook event ignored: " + eventId);
                 return;
             }
 
-            // Timestamp validation (reject events older than 5 minutes)
+            // Timestamp validation: reject events older than 5 minutes
             long eventTimestamp = event.getCreated();
             long now = Instant.now().getEpochSecond();
             if (now - eventTimestamp > 300) {
@@ -149,6 +156,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             // Mark event as processed
             processedEventIds.add(eventId);
+            // Prevent memory leak by clearing cache if too large
             if (processedEventIds.size() > 10000) {
                 processedEventIds.clear();
             }
