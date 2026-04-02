@@ -78,12 +78,10 @@ public class CartServiceImpl implements CartService {
                 .orElse(null);
 
         if (existingItem != null) {
-            // Existing item: validate total quantity
             stockValidator.validateStockForAddition(product, existingItem.getQuantity(), request.getQuantity());
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
             cartItemRepository.save(existingItem);
         } else {
-            // New item: create and add
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
             newItem.setProduct(product);
@@ -149,26 +147,32 @@ public class CartServiceImpl implements CartService {
         cart.getItems().clear();
     }
 
-    private CartResDto convertToDto(Cart cart) {
-    List<CartItemResDto> itemDtos = cart.getItems().stream()
-            .map(item -> {
-                Product p = item.getProduct();
-                if (p == null) {
-                    throw new IllegalStateException("Cart item references missing product");
-                }
-                double subtotal = p.getPrice() * item.getQuantity();
-                return new CartItemResDto(
-                        item.getId(),
-                        p.getId(),
-                        p.getName(),
-                        p.getPrice(),
-                        item.getQuantity(),
-                        subtotal
-                );
-            })
-            .collect(Collectors.toList());
+    // Extract item conversion to separate method
+    private CartItemResDto convertItemToDto(CartItem item) {
+        Product p = item.getProduct();
+        if (p == null) {
+            throw new IllegalStateException("Cart item references missing product");
+        }
+        if (p.getPrice() == null) {
+            throw new IllegalStateException("Product price cannot be null for product: " + p.getName());
+        }
+        double subtotal = p.getPrice() * item.getQuantity();
+        return new CartItemResDto(
+                item.getId(),
+                p.getId(),
+                p.getName(),
+                p.getPrice(),
+                item.getQuantity(),
+                subtotal
+        );
+    }
 
-    double total = itemDtos.stream().mapToDouble(CartItemResDto::getSubtotal).sum();
-    return new CartResDto(cart.getId(), itemDtos, total);
-}
+    private CartResDto convertToDto(Cart cart) {
+        List<CartItemResDto> itemDtos = cart.getItems().stream()
+                .map(this::convertItemToDto)
+                .collect(Collectors.toList());
+
+        double total = itemDtos.stream().mapToDouble(CartItemResDto::getSubtotal).sum();
+        return new CartResDto(cart.getId(), itemDtos, total);
+    }
 }

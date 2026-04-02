@@ -48,7 +48,6 @@ public class PaymentServiceImpl implements PaymentService {
     public void validateWebhookSecret() {
         String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
         if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
-            // Log warning but don't fail startup – webhook may not be used
             System.err.println("WARNING: STRIPE_WEBHOOK_SECRET not configured. Webhook processing will fail.");
         }
     }
@@ -92,25 +91,24 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
 
-            if ("payment_intent.succeeded".equals(event.getType())) {
+            if ("payment_intent.succeeded".equals(event.getType()) || "payment_intent.payment_failed".equals(event.getType())) {
                 PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
                 String orderIdStr = paymentIntent.getMetadata().get("orderId");
+                
+                // Add null check for orderId metadata
+                if (orderIdStr == null) {
+                    throw new BadRequestException("Missing orderId in payment metadata");
+                }
+                
                 Long orderId = Long.parseLong(orderIdStr);
-
                 Order order = orderRepository.findById(orderId)
                         .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
-                order.setPaymentStatus("PAID");
-                orderRepository.save(order);
-            }
-
-            if ("payment_intent.payment_failed".equals(event.getType())) {
-                PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
-                String orderIdStr = paymentIntent.getMetadata().get("orderId");
-                Long orderId = Long.parseLong(orderIdStr);
-
-                Order order = orderRepository.findById(orderId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
-                order.setPaymentStatus("FAILED");
+                
+                if ("payment_intent.succeeded".equals(event.getType())) {
+                    order.setPaymentStatus("PAID");
+                } else {
+                    order.setPaymentStatus("FAILED");
+                }
                 orderRepository.save(order);
             }
         } catch (SignatureVerificationException e) {

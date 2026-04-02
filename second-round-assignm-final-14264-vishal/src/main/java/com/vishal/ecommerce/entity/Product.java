@@ -1,13 +1,12 @@
 package com.vishal.ecommerce.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
-@Data
 @Entity
 @Table(name = "products")
 public class Product {
-@Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -25,7 +24,7 @@ public class Product {
     private String imageUrl;
 
     @Version
-    private Integer version;  // For optimistic locking
+    private Integer version;
 
     public Product() {}
 

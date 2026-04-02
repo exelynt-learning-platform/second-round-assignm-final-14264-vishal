@@ -3,6 +3,8 @@ package com.vishal.ecommerce.service.Impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.validation.ValidationException;  // <-- Added missing import
+
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -28,8 +30,6 @@ import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 import com.vishal.ecommerce.service.OrderService;
 
-import jakarta.validation.ValidationException;   // <-- Added import
-
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -52,10 +52,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)   // <-- Added rollback for any exception
+    @Transactional(rollbackFor = Exception.class)
     @Retryable(value = OptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public OrderResDto createOrder(String username, OrderReqDto request) {
-        // Shipping address validation (redundant with DTO annotation but safe)
+        // Validate shipping address
         String address = request.getShippingAddress();
         if (address == null || address.trim().isEmpty() || address.length() > 255) {
             throw new ValidationException("Shipping address must be between 1 and 255 characters");
@@ -86,7 +86,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             product.setStockQuantity(product.getStockQuantity() - qty);
-            productRepository.save(product);
+            productRepository.save(product);   // Optimistic locking will check @Version
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
