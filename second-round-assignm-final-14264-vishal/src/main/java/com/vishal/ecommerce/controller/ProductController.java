@@ -27,6 +27,10 @@ public class ProductController {
     
     private final ProductService productService;
 
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
+
     @GetMapping
     public ResponseEntity<List<ProductResDto>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
@@ -41,5 +45,17 @@ public class ProductController {
     public ResponseEntity<ProductResDto> createProduct(@Valid @RequestBody ProductReqDto request) {
         ProductResDto response = productService.createProduct(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResDto> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductReqDto request) {
+        ProductResDto response = productService.updateProduct(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
     }
 }

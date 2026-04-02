@@ -17,9 +17,9 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
     private ProductRepository productRepository;
 
     @Override
@@ -29,6 +29,27 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
+
+    @Override
+public ProductResDto updateProduct(Long id, ProductReqDto request) {
+    Product product = productRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+    product.setName(request.getName());
+    product.setDescription(request.getDescription());
+    product.setPrice(request.getPrice());
+    product.setStockQuantity(request.getStockQuantity());
+    product.setImageUrl(request.getImageUrl());
+    Product updated = productRepository.save(product);
+    return convertToDto(updated);
+}
+
+@Override
+public void deleteProduct(Long id) {
+    if (!productRepository.existsById(id)) {
+        throw new ResourceNotFoundException("Product not found with id: " + id);
+    }
+    productRepository.deleteById(id);
+}
     @Override
     public ProductResDto getProductById(Long id) {
         Product product = productRepository.findById(id)

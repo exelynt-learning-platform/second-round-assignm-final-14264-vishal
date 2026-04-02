@@ -1,6 +1,7 @@
 package com.vishal.ecommerce.config;
 
 import com.vishal.ecommerce.repository.UserRepository;
+import com.vishal.ecommerce.security.CustomUserDetailsService;
 import com.vishal.ecommerce.security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,19 +25,35 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-   @Bean
+   private final JwtFilter jwtFilter;
+    private final CustomUserDetailsService customUserDetailsService;
+
+    public SecurityConfig(JwtFilter jwtFilter, CustomUserDetailsService customUserDetailsService) {
+        this.jwtFilter = jwtFilter;
+        this.customUserDetailsService = customUserDetailsService;
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/users/register").permitAll()
+                .requestMatchers("/api/users/register", "/api/users/login", "/api/products", "/api/payments/webhook").permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+            .userDetailsService(customUserDetailsService)
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

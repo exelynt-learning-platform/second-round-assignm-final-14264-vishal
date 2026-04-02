@@ -37,6 +37,13 @@ public class CartServiceImpl implements CartService {
         this.productRepository = productRepository;
     }
 
+    // Helper: Get user or throw exception
+    private User getUserOrThrow(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+    }
+
+    // Helper: Get or create cart for a user
     private Cart getOrCreateCart(User user) {
         return cartRepository.findByUser(user).orElseGet(() -> {
             Cart newCart = new Cart();
@@ -47,8 +54,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResDto getCart(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = getUserOrThrow(username);
         Cart cart = getOrCreateCart(user);
         return convertToDto(cart);
     }
@@ -56,8 +62,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartResDto addItemToCart(String username, CartItemReqDto request) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = getUserOrThrow(username);
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
@@ -94,8 +99,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartResDto updateCartItem(String username, Long itemId, Integer quantity) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = getUserOrThrow(username);
         Cart cart = getOrCreateCart(user);
 
         CartItem item = cart.getItems().stream()
@@ -118,21 +122,10 @@ public class CartServiceImpl implements CartService {
         return convertToDto(cart);
     }
 
-
-    @Override
-@Transactional
-public void clearCart(String username) {
-    User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    Cart cart = getOrCreateCart(user);
-    cartItemRepository.deleteAll(cart.getItems());
-    cart.getItems().clear();
-}
     @Override
     @Transactional
     public CartResDto removeCartItem(String username, Long itemId) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = getUserOrThrow(username);
         Cart cart = getOrCreateCart(user);
 
         CartItem item = cart.getItems().stream()
@@ -144,6 +137,15 @@ public void clearCart(String username) {
         cartItemRepository.delete(item);
 
         return convertToDto(cart);
+    }
+
+    @Override
+    @Transactional
+    public void clearCart(String username) {
+        User user = getUserOrThrow(username);
+        Cart cart = getOrCreateCart(user);
+        cartItemRepository.deleteAll(cart.getItems());
+        cart.getItems().clear();
     }
 
     private CartResDto convertToDto(Cart cart) {

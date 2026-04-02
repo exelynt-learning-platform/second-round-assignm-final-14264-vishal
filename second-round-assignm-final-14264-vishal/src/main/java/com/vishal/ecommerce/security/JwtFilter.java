@@ -18,53 +18,36 @@ import java.util.List;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JwtFilter.class);
+    private final JwtUtil jwtUtil;
 
-        private static final String BEARER_PREFIX = "Bearer ";
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    public JwtFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-        
 
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtUtil.validateToken(token)) {
+                String username = jwtUtil.extractUsername(token);
+                String role = jwtUtil.extractRole(token);
 
-if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+                // Normalize role: ensure it starts with ROLE_
+                if (role != null && !role.startsWith("ROLE_")) {
+                    role = "ROLE_" + role;
+                }
 
-        String token = authHeader.substring(BEARER_PREFIX.length());
-
-        if (jwtUtil.isTokenValid(token)&& SecurityContextHolder.getContext().getAuthentication() == null) {
-    String username = jwtUtil.extractUsername(token);
-String role = jwtUtil.extractRole(token);
-    if (role == null || role.isBlank()) {
-                role = "ROLE_USER";
-            } else {
-                    role = role.trim().toUpperCase();
-                if(!role.startsWith("ROLE_"))
-                role = "ROLE_" + role;
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        username, null, Collections.singletonList(new SimpleGrantedAuthority(role))
+                );
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
-    List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
-    UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(username, null, authorities);
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-}
- else {
-    logger.warn("Invalid JWT token received for request: {}", request.getRequestURI());
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-    return;
-
-}
-
-
-        filterChain.doFilter(request, response);
+        }
+        chain.doFilter(request, response);
     }
 }
 

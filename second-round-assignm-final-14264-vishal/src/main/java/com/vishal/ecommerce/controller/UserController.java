@@ -20,9 +20,19 @@ public class UserController {
 
     private final UserService userService;
 
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @PostMapping("/register")
     public ResponseEntity<UserAuthResDto> register(@Valid @RequestBody UserRegisterReqDto request) {
         UserAuthResDto response = userService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserAuthResDto> login(@Valid @RequestBody UserLoginReqDto request) {
+        UserAuthResDto response = userService.loginUser(request);
+        return ResponseEntity.ok(response);
     }
 }

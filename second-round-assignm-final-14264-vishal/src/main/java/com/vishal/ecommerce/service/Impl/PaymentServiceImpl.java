@@ -68,14 +68,15 @@ public class PaymentServiceImpl implements PaymentService {
         return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
     }
 
-    @Override
+   @Override
 @Transactional
 public void handleWebhook(String payload, String sigHeader) {
+    String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
+    if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
+        throw new BadRequestException("Webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.");
+    }
+    
     try {
-        String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
-        if (webhookSecret == null) {
-            webhookSecret = ""; // fallback, but you should set it
-        }
         Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
 
         if ("payment_intent.succeeded".equals(event.getType())) {
@@ -102,7 +103,7 @@ public void handleWebhook(String payload, String sigHeader) {
     } catch (SignatureVerificationException e) {
         throw new BadRequestException("Invalid webhook signature");
     } catch (Exception e) {
-        throw new RuntimeException("Webhook processing error: " + e.getMessage());
+        throw new RuntimeException("Webhook processing error: " + e.getMessage(), e);
     }
 }
 

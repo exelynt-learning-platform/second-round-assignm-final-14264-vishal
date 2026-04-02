@@ -26,6 +26,8 @@ import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 import com.vishal.ecommerce.service.OrderService;
 
+import jakarta.validation.ValidationException;
+
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -45,6 +47,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResDto createOrder(String username, OrderReqDto request) {
+        // Validate shipping address
+        String address = request.getShippingAddress();
+        if (address == null || address.trim().isEmpty() || address.length() > 255) {
+            throw new ValidationException("Shipping address must be between 1 and 255 characters");
+        }
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -84,6 +92,7 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalPrice(total);
         Order savedOrder = orderRepository.save(order);
 
+        // Clear cart after successful order creation
         cartService.clearCart(username);
 
         return convertToDto(savedOrder);
@@ -135,4 +144,5 @@ public class OrderServiceImpl implements OrderService {
                 itemDtos
         );
     }
+
 }
