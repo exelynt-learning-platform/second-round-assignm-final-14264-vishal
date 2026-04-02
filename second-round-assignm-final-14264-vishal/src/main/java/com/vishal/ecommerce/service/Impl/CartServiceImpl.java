@@ -120,6 +120,16 @@ public class CartServiceImpl implements CartService {
         return convertToDto(cart);
     }
 
+
+    @Override
+@Transactional
+public void clearCart(String username) {
+    User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    Cart cart = getOrCreateCart(user);
+    cartItemRepository.deleteAll(cart.getItems());
+    cart.getItems().clear();
+}
     @Override
     @Transactional
     public CartResDto removeCartItem(String username, Long itemId) {

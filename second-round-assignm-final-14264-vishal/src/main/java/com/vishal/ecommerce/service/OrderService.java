@@ -8,8 +8,6 @@ import com.vishal.ecommerce.dto.res.OrderResDto;
 public interface OrderService {
 
         OrderResDto createOrder(String username, OrderReqDto request);
-
-        OrderResDto getOrderById(String username, Long orderId);
-
-        List<OrderResDto> getAllOrders(String username);
+    OrderResDto getOrderById(String username, Long orderId);
+    List<OrderResDto> getAllOrdersForUser(String username);
 }
