@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.stripe.exception.StripeException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -18,6 +20,13 @@ public class GlobalExceptionHandler {
         error.put("error", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(StripeException.class)
+public ResponseEntity<Map<String, String>> handleStripeException(StripeException ex) {
+    Map<String, String> error = new HashMap<>();
+    error.put("error", "Payment service error: " + ex.getMessage());
+    return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY);
+}
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {

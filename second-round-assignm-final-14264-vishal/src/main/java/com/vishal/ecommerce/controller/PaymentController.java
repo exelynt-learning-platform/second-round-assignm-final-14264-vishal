@@ -1,20 +1,16 @@
 package com.vishal.ecommerce.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.stripe.exception.StripeException;
 import com.vishal.ecommerce.dto.req.PaymentIntentReqDto;
 import com.vishal.ecommerce.dto.res.PaymentIntentResDto;
-import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.service.PaymentService;
 
 import jakarta.validation.Valid;
@@ -35,7 +31,7 @@ public class PaymentController {
     }
 
     @PostMapping("/create-intent")
-    public ResponseEntity<PaymentIntentResDto> createPaymentIntent(@Valid @RequestBody PaymentIntentReqDto request) throws StripeException {
+public ResponseEntity<PaymentIntentResDto> createPaymentIntent(@Valid @RequestBody PaymentIntentReqDto request) throws StripeException {
         String username = getCurrentUsername();
         return ResponseEntity.ok(paymentService.createPaymentIntent(request, username));
     }

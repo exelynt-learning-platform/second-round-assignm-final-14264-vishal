@@ -18,10 +18,10 @@ import com.vishal.ecommerce.entity.Product;
 import com.vishal.ecommerce.entity.User;
 import com.vishal.ecommerce.exception.BadRequestException;
 import com.vishal.ecommerce.exception.ResourceNotFoundException;
-import com.vishal.ecommerce.repository.CartItemRepository;
 import com.vishal.ecommerce.repository.CartRepository;
 import com.vishal.ecommerce.repository.OrderItemRepository;
 import com.vishal.ecommerce.repository.OrderRepository;
+import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 import com.vishal.ecommerce.service.OrderService;
@@ -34,13 +34,18 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ProductRepository productRepository;
     private final CartService cartService;
 
     public OrderServiceImpl(UserRepository userRepository, CartRepository cartRepository,
-                            OrderRepository orderRepository, CartService cartService) {
+                            OrderRepository orderRepository, OrderItemRepository orderItemRepository,
+                            ProductRepository productRepository, CartService cartService) {
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+        this.productRepository = productRepository;
         this.cartService = cartService;
     }
 
@@ -77,7 +82,9 @@ public class OrderServiceImpl implements OrderService {
                 throw new BadRequestException("Insufficient stock for product: " + product.getName());
             }
 
+            // Deduct stock and save product
             product.setStockQuantity(product.getStockQuantity() - qty);
+            productRepository.save(product);
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
@@ -85,6 +92,7 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setProductPrice(product.getPrice());
             orderItem.setQuantity(qty);
             order.getItems().add(orderItem);
+            orderItemRepository.save(orderItem);
 
             total += product.getPrice() * qty;
         }
@@ -97,7 +105,6 @@ public class OrderServiceImpl implements OrderService {
 
         return convertToDto(savedOrder);
     }
-
     @Override
     public OrderResDto getOrderById(String username, Long orderId) {
         User user = userRepository.findByUsername(username)

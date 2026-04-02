@@ -1,6 +1,5 @@
 package com.vishal.ecommerce.service.Impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,17 +67,15 @@ public class PaymentServiceImpl implements PaymentService {
         return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
     }
 
-   @Override
+  @Override
 @Transactional
 public void handleWebhook(String payload, String sigHeader) {
     String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
     if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
         throw new BadRequestException("Webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.");
     }
-    
     try {
         Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
-
         if ("payment_intent.succeeded".equals(event.getType())) {
             PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
             String orderIdStr = paymentIntent.getMetadata().get("orderId");
@@ -100,7 +97,7 @@ public void handleWebhook(String payload, String sigHeader) {
             order.setPaymentStatus("FAILED");
             orderRepository.save(order);
         }
-    } catch (SignatureVerificationException e) {
+   } catch (SignatureVerificationException e) {
         throw new BadRequestException("Invalid webhook signature");
     } catch (Exception e) {
         throw new RuntimeException("Webhook processing error: " + e.getMessage(), e);

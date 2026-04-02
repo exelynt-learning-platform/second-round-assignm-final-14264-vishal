@@ -96,31 +96,32 @@ public class CartServiceImpl implements CartService {
         return convertToDto(cart);
     }
 
-    @Override
-    @Transactional
-    public CartResDto updateCartItem(String username, Long itemId, Integer quantity) {
-        User user = getUserOrThrow(username);
-        Cart cart = getOrCreateCart(user);
+  @Override
+@Transactional
+public CartResDto updateCartItem(String username, Long itemId, Integer quantity) {
+    User user = getUserOrThrow(username);
+    Cart cart = getOrCreateCart(user);
 
-        CartItem item = cart.getItems().stream()
-                .filter(i -> i.getId().equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+    CartItem item = cart.getItems().stream()
+            .filter(i -> i.getId().equals(itemId))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
-        if (quantity <= 0) {
-            cart.getItems().remove(item);
-            cartItemRepository.delete(item);
-        } else {
-            Product product = item.getProduct();
-            if (product.getStockQuantity() < quantity) {
-                throw new BadRequestException("Insufficient stock. Available: " + product.getStockQuantity());
-            }
-            item.setQuantity(quantity);
-            cartItemRepository.save(item);
+    if (quantity <= 0) {
+        cart.getItems().remove(item);
+        cartItemRepository.delete(item);
+    } else {
+        Product product = item.getProduct();
+        // Add stock validation
+        if (product.getStockQuantity() < quantity) {
+            throw new BadRequestException("Insufficient stock. Available: " + product.getStockQuantity());
         }
-
-        return convertToDto(cart);
+        item.setQuantity(quantity);
+        cartItemRepository.save(item);
     }
+
+    return convertToDto(cart);
+}
 
     @Override
     @Transactional
