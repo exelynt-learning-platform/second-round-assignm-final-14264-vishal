@@ -42,15 +42,16 @@ public class SecurityConfig {
 if (role == null || role.isBlank()) {
     role = "USER";
 }  else {
-    role = role.toUpperCase();
+    role = role.trim().toUpperCase();
 }
 if (!role.equals("USER") && !role.equals("ADMIN")) {
-    throw new IllegalArgumentException("Invalid role");
+    throw new IllegalArgumentException("Invalid role: " + role);
 }
     
 
 
-            return User.withUsername(user.getUsername())
+            return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
         .password(user.getPassword())
         .roles(role)
         .build();

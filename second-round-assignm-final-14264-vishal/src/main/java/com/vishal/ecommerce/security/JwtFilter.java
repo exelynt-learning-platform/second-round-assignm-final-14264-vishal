@@ -41,13 +41,15 @@ if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
 
         String token = authHeader.substring(BEARER_PREFIX.length());
 
-        if (jwtUtil.isTokenValid(token)) {
+        if (jwtUtil.isTokenValid(token)&& SecurityContextHolder.getContext().getAuthentication() == null) {
     String username = jwtUtil.extractUsername(token);
 String role = jwtUtil.extractRole(token);
     if (role == null || role.isBlank()) {
                 role = "ROLE_USER";
-            } else if (!role.startsWith("ROLE_")) {
-                role = "ROLE_" + role.toUpperCase();
+            } else {
+                    role = role.trim().toUpperCase();
+                if(!role.startsWith("ROLE_"))
+                role = "ROLE_" + role;
             }
     List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
     UsernamePasswordAuthenticationToken authentication =
