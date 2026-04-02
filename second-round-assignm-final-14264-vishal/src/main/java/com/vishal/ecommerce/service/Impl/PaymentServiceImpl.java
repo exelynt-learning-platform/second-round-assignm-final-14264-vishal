@@ -17,6 +17,8 @@ import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.PaymentService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,11 +37,20 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @PostConstruct
-    public void init() {
+    public void validateStripeKey() {
         if (stripeSecretKey == null || stripeSecretKey.trim().isEmpty()) {
             throw new IllegalStateException("Stripe secret key is not configured. Please set STRIPE_SECRET_KEY environment variable.");
         }
         Stripe.apiKey = stripeSecretKey;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void validateWebhookSecret() {
+        String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
+        if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
+            // Log warning but don't fail startup – webhook may not be used
+            System.err.println("WARNING: STRIPE_WEBHOOK_SECRET not configured. Webhook processing will fail.");
+        }
     }
 
     @Override

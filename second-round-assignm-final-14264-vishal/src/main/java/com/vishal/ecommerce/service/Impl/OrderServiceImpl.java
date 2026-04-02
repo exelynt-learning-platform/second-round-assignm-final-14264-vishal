@@ -28,7 +28,7 @@ import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
 import com.vishal.ecommerce.service.OrderService;
 
-import jakarta.validation.ValidationException;
+import jakarta.validation.ValidationException;   // <-- Added import
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -52,10 +52,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)   // <-- Added rollback for any exception
     @Retryable(value = OptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public OrderResDto createOrder(String username, OrderReqDto request) {
-        // Validate shipping address - prevent DB constraint violation
+        // Shipping address validation (redundant with DTO annotation but safe)
         String address = request.getShippingAddress();
         if (address == null || address.trim().isEmpty() || address.length() > 255) {
             throw new ValidationException("Shipping address must be between 1 and 255 characters");

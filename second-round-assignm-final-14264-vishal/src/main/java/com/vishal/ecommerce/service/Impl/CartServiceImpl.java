@@ -150,22 +150,25 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartResDto convertToDto(Cart cart) {
-        List<CartItemResDto> itemDtos = cart.getItems().stream()
-                .map(item -> {
-                    Product p = item.getProduct();
-                    double subtotal = p.getPrice() * item.getQuantity();
-                    return new CartItemResDto(
-                            item.getId(),
-                            p.getId(),
-                            p.getName(),
-                            p.getPrice(),
-                            item.getQuantity(),
-                            subtotal
-                    );
-                })
-                .collect(Collectors.toList());
+    List<CartItemResDto> itemDtos = cart.getItems().stream()
+            .map(item -> {
+                Product p = item.getProduct();
+                if (p == null) {
+                    throw new IllegalStateException("Cart item references missing product");
+                }
+                double subtotal = p.getPrice() * item.getQuantity();
+                return new CartItemResDto(
+                        item.getId(),
+                        p.getId(),
+                        p.getName(),
+                        p.getPrice(),
+                        item.getQuantity(),
+                        subtotal
+                );
+            })
+            .collect(Collectors.toList());
 
-        double total = itemDtos.stream().mapToDouble(CartItemResDto::getSubtotal).sum();
-        return new CartResDto(cart.getId(), itemDtos, total);
-    }
+    double total = itemDtos.stream().mapToDouble(CartItemResDto::getSubtotal).sum();
+    return new CartResDto(cart.getId(), itemDtos, total);
+}
 }
