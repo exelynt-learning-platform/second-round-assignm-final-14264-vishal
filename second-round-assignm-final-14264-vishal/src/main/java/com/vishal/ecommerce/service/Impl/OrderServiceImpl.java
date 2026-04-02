@@ -40,6 +40,22 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CartRepository cartRepository;
 
+    @Transactional
+private Cart getOrCreateCart(User user) {
+    Cart cart = cartRepository.findByUser(user);
+
+    if (cart == null) {
+        cart = new Cart();
+        cart.setUser(user);
+        cart.setItems(new ArrayList<>());
+        cartRepository.save(cart);
+    } else if (cart.getItems() == null) {
+        cart.setItems(new ArrayList<>());
+    }
+
+    return cart;
+}
+
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     @Override
     public OrderResDto createOrder(String username, OrderReqDto request) {
@@ -51,9 +67,9 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("User not found: " + username);
         }
 
-        Cart cart = cartRepository.findByUser(user);
+        Cart cart = getOrCreateCart(user);
 
-        if (cart == null || cart.getItems().isEmpty()) {
+        if (cart.getItems().isEmpty()) {
         throw new BadRequestException("Cart is empty");
     }
 
@@ -96,9 +112,7 @@ for (CartItem item : cartItemsCopy) {
 
         orderRepository.save(order);
 
-if (cart.getItems() != null) {
-    cart.getItems().clear();
-}
+cart.getItems().clear();
   cartRepository.save(cart);
 
         return mapToOrderResDto(order);

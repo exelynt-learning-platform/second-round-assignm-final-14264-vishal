@@ -39,7 +39,7 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     private Cart getOrCreateCart(User user) {
-        Cart cart = cartRepository.findByUser(user);
+        Cart cart = getOrCreateCart(user);
         if (cart == null) {
             cart = new Cart();
             cart.setUser(user);
