@@ -29,8 +29,12 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Cart cart;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+
 }

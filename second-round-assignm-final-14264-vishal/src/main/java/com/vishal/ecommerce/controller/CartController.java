@@ -9,48 +9,52 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.vishal.ecommerce.dto.req.CartItemReqDto;
 import com.vishal.ecommerce.dto.res.CartResDto;
 import com.vishal.ecommerce.service.CartService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/cart")
 public class CartController {
 
-    @Autowired
-    private CartService cartService;
+    private final CartService cartService;
 
+    public CartController(CartService cartService) {
+        this.cartService = cartService;
+    }
 
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
 
     @GetMapping
-    public ResponseEntity<CartResDto> getCart(@AuthenticationPrincipal String username) {
+    public ResponseEntity<CartResDto> getCart() {
+        String username = getCurrentUsername();
         return ResponseEntity.ok(cartService.getCart(username));
     }
 
     @PostMapping("/items")
-    public ResponseEntity<CartResDto> addItem(@AuthenticationPrincipal String username, @RequestBody CartItemReqDto request) {
-        return ResponseEntity.ok(cartService.addItem(username, request));
+    public ResponseEntity<CartResDto> addItem(@Valid @RequestBody CartItemReqDto request) {
+        String username = getCurrentUsername();
+        return ResponseEntity.ok(cartService.addItemToCart(username, request));
     }
 
-   @PutMapping("/items/{itemId}")
-public ResponseEntity<CartResDto> updateItem(@AuthenticationPrincipal String username, @PathVariable("itemId") Long itemId, @RequestBody CartItemReqDto request) {
-    return ResponseEntity.ok(cartService.updateItem(username, itemId, request.getQuantity()));
-}
+    @PutMapping("/items/{itemId}")
+    public ResponseEntity<CartResDto> updateItem(@PathVariable Long itemId, @RequestParam Integer quantity) {
+        String username = getCurrentUsername();
+        return ResponseEntity.ok(cartService.updateCartItem(username, itemId, quantity));
+    }
 
     @DeleteMapping("/items/{itemId}")
-    public ResponseEntity<String> removeItem(@AuthenticationPrincipal String username, @PathVariable("itemId") Long itemId) {
-        cartService.removeItem(username, itemId);
-        return ResponseEntity.ok("Item removed");
+    public ResponseEntity<CartResDto> removeItem(@PathVariable Long itemId) {
+        String username = getCurrentUsername();
+        return ResponseEntity.ok(cartService.removeCartItem(username, itemId));
     }
-
-    @DeleteMapping
-    public ResponseEntity<String> clearCart(@AuthenticationPrincipal String username) {
-        cartService.clearCart(username);
-        return ResponseEntity.ok("Cart cleared");
-    }
-    
 }
