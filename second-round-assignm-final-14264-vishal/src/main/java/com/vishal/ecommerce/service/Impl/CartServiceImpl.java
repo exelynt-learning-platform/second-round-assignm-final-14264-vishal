@@ -39,7 +39,7 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     private Cart getOrCreateCart(User user) {
-        Cart cart = getOrCreateCart(user);
+        Cart cart = cartRepository.findByUser(user);
         if (cart == null) {
             cart = new Cart();
             cart.setUser(user);
@@ -47,6 +47,7 @@ public class CartServiceImpl implements CartService {
             cartRepository.save(cart);
         }else if(cart.getItems() == null){
 cart.setItems(new ArrayList<>());
+cartRepository.save(cart);
         }
         return cart;
     }
@@ -58,9 +59,11 @@ cart.setItems(new ArrayList<>());
 
 List<CartItem> items = cart.getItems();
 
+if (items == null) {
+    items = new ArrayList<>();
+}
 
-
-for (CartItem item : items) {
+for (CartItem item : items)  {
         if (item.getProduct() == null) continue;
 
         CartItemResDto dto = new CartItemResDto();
@@ -169,9 +172,8 @@ items.add(item);
     public void clearCart(String username) {
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
-if (cart.getItems() != null) {
-        cart.getItems().clear();
-    }        
+cart.getItems().clear();
+cartRepository.save(cart);     
     cartRepository.save(cart);
     }
 

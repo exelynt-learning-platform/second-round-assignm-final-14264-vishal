@@ -51,6 +51,7 @@ private Cart getOrCreateCart(User user) {
         cartRepository.save(cart);
     } else if (cart.getItems() == null) {
         cart.setItems(new ArrayList<>());
+        cartRepository.save(cart);
     }
 
     return cart;
@@ -69,11 +70,13 @@ private Cart getOrCreateCart(User user) {
 
         Cart cart = getOrCreateCart(user);
 
-        if (cart.getItems().isEmpty()) {
-        throw new BadRequestException("Cart is empty");
-    }
+        List<CartItem> items = cart.getItems();
 
-    List<CartItem> cartItemsCopy = new ArrayList<>(cart.getItems());
+if (items.isEmpty()) {
+    throw new BadRequestException("Cart is empty");
+}
+
+    List<CartItem> cartItemsCopy = new ArrayList<>(items);
 
 
         
