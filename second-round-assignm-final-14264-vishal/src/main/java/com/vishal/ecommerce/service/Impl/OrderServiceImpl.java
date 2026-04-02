@@ -13,6 +13,7 @@ import com.vishal.ecommerce.dto.req.OrderReqDto;
 import com.vishal.ecommerce.dto.res.OrderItemResDto;
 import com.vishal.ecommerce.dto.res.OrderResDto;
 import com.vishal.ecommerce.entity.Cart;
+import com.vishal.ecommerce.entity.CartItem;      // <-- Added import
 import com.vishal.ecommerce.entity.Order;
 import com.vishal.ecommerce.entity.OrderItem;
 import com.vishal.ecommerce.entity.Product;
@@ -80,14 +81,12 @@ public class OrderServiceImpl implements OrderService {
             Product product = cartItem.getProduct();
             int qty = cartItem.getQuantity();
 
-            // Stock validation BEFORE deduction (with version check)
             if (product.getStockQuantity() < qty) {
                 throw new BadRequestException("Insufficient stock for product: " + product.getName());
             }
 
-            // Deduct stock - version will be auto-incremented by JPA
             product.setStockQuantity(product.getStockQuantity() - qty);
-            productRepository.save(product);  // Optimistic lock will check version
+            productRepository.save(product);
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
@@ -102,7 +101,6 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalPrice(total);
         Order savedOrder = orderRepository.save(order);
-
         cartService.clearCart(username);
 
         return convertToDto(savedOrder);

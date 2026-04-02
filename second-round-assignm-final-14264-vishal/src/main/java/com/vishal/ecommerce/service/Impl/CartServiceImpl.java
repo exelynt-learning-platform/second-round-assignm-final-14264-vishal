@@ -20,11 +20,12 @@ import com.vishal.ecommerce.repository.CartRepository;
 import com.vishal.ecommerce.repository.ProductRepository;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.CartService;
+import com.vishal.ecommerce.service.StockValidator;
 
 @Service
 public class CartServiceImpl implements CartService {
 
-  private final UserRepository userRepository;
+    private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
@@ -95,7 +96,6 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public CartResDto updateCartItem(String username, Long itemId, Integer quantity) {
-        // Add null check
         if (quantity == null) {
             throw new BadRequestException("Quantity cannot be null");
         }

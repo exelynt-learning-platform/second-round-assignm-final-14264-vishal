@@ -1,9 +1,5 @@
 package com.vishal.ecommerce.service.Impl;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
@@ -19,8 +15,10 @@ import com.vishal.ecommerce.exception.ResourceNotFoundException;
 import com.vishal.ecommerce.repository.OrderRepository;
 import com.vishal.ecommerce.repository.UserRepository;
 import com.vishal.ecommerce.service.PaymentService;
-
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -38,75 +36,76 @@ public class PaymentServiceImpl implements PaymentService {
 
     @PostConstruct
     public void init() {
+        if (stripeSecretKey == null || stripeSecretKey.trim().isEmpty()) {
+            throw new IllegalStateException("Stripe secret key is not configured. Set STRIPE_SECRET_KEY environment variable.");
+        }
         Stripe.apiKey = stripeSecretKey;
     }
 
     @Override
-public PaymentIntentResDto createPaymentIntent(PaymentIntentReqDto request, String username) throws StripeException {
-    User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public PaymentIntentResDto createPaymentIntent(PaymentIntentReqDto request, String username) throws com.stripe.exception.StripeException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-    Order order = orderRepository.findById(request.getOrderId())
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order = orderRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-    if (!order.getUser().getId().equals(user.getId())) {
-        throw new BadRequestException("You are not authorized to pay for this order");
-    }
-
-    // Validate total price
-    if (order.getTotalPrice() == null || order.getTotalPrice() <= 0) {
-        throw new BadRequestException("Order total must be greater than zero");
-    }
-
-    long amount = (long) (order.getTotalPrice() * 100);
-
-    PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-            .setCurrency("usd")
-            .setAmount(amount)
-            .setDescription("Order #" + order.getId())
-            .putMetadata("orderId", order.getId().toString())
-            .build();
-
-    PaymentIntent paymentIntent = PaymentIntent.create(params);
-
-    return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
-}
-
-  @Override
-@Transactional
-public void handleWebhook(String payload, String sigHeader) {
-    String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
-    if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
-        throw new BadRequestException("Webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.");
-    }
-    try {
-        Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
-        if ("payment_intent.succeeded".equals(event.getType())) {
-            PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
-            String orderIdStr = paymentIntent.getMetadata().get("orderId");
-            Long orderId = Long.parseLong(orderIdStr);
-
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
-            order.setPaymentStatus("PAID");
-            orderRepository.save(order);
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("You are not authorized to pay for this order");
         }
 
-        if ("payment_intent.payment_failed".equals(event.getType())) {
-            PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
-            String orderIdStr = paymentIntent.getMetadata().get("orderId");
-            Long orderId = Long.parseLong(orderIdStr);
-
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
-            order.setPaymentStatus("FAILED");
-            orderRepository.save(order);
+        if (order.getTotalPrice() == null || order.getTotalPrice() <= 0) {
+            throw new BadRequestException("Order total must be greater than zero");
         }
-   } catch (SignatureVerificationException e) {
-        throw new BadRequestException("Invalid webhook signature");
-    } catch (Exception e) {
-        throw new RuntimeException("Webhook processing error: " + e.getMessage(), e);
-    }
-}
 
+        long amount = (long) (order.getTotalPrice() * 100);
+
+        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                .setCurrency("usd")
+                .setAmount(amount)
+                .setDescription("Order #" + order.getId())
+                .putMetadata("orderId", order.getId().toString())
+                .build();
+
+        PaymentIntent paymentIntent = PaymentIntent.create(params);
+        return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
+    }
+
+    @Override
+    @Transactional
+    public void handleWebhook(String payload, String sigHeader) {
+        String webhookSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
+        if (webhookSecret == null || webhookSecret.trim().isEmpty()) {
+            throw new BadRequestException("Webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.");
+        }
+        try {
+            Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+
+            if ("payment_intent.succeeded".equals(event.getType())) {
+                PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
+                String orderIdStr = paymentIntent.getMetadata().get("orderId");
+                Long orderId = Long.parseLong(orderIdStr);
+
+                Order order = orderRepository.findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
+                order.setPaymentStatus("PAID");
+                orderRepository.save(order);
+            }
+
+            if ("payment_intent.payment_failed".equals(event.getType())) {
+                PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
+                String orderIdStr = paymentIntent.getMetadata().get("orderId");
+                Long orderId = Long.parseLong(orderIdStr);
+
+                Order order = orderRepository.findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
+                order.setPaymentStatus("FAILED");
+                orderRepository.save(order);
+            }
+        } catch (SignatureVerificationException e) {
+            throw new BadRequestException("Invalid webhook signature");
+        } catch (Exception e) {
+            throw new RuntimeException("Webhook processing error: " + e.getMessage(), e);
+        }
+    }
 }

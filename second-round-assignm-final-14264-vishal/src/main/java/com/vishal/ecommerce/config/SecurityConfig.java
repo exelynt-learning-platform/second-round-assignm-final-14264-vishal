@@ -1,7 +1,7 @@
 package com.vishal.ecommerce.config;
 
-import com.vishal.ecommerce.security.CustomUserDetailsService;
 import com.vishal.ecommerce.security.JwtFilter;
+import com.vishal.ecommerce.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,7 +10,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -20,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-   private final JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter;
     private final CustomUserDetailsService customUserDetailsService;
 
     public SecurityConfig(JwtFilter jwtFilter, CustomUserDetailsService customUserDetailsService) {
@@ -40,17 +39,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
-        requestHandler.setCsrfRequestAttributeName(null);
-
         http
-            // CSRF is disabled for stateless REST API using JWT.
-            // For browser clients, CSRF protection would be needed, but this backend serves mobile/SPA apps.
-            // If CSRF is required, enable it for non-API endpoints only.
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**")  // Disable CSRF for API endpoints
-                .csrfTokenRequestHandler(requestHandler)
-            )
+            .csrf(AbstractHttpConfigurer::disable)  // Disable CSRF for stateless JWT API
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/register", "/api/users/login", "/api/products", "/api/payments/webhook").permitAll()
