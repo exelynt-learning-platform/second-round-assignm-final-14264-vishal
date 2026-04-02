@@ -1,17 +1,18 @@
 package com.vishal.ecommerce.service.Impl;
 
-
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.stream.Collectors;
 
-import com.vishal.ecommerce.dto.req.OrderItemResDto;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.vishal.ecommerce.dto.req.OrderReqDto;
+import com.vishal.ecommerce.dto.res.OrderItemResDto;
 import com.vishal.ecommerce.dto.res.OrderResDto;
 import com.vishal.ecommerce.entity.Cart;
-import com.vishal.ecommerce.entity.CartItem;
 import com.vishal.ecommerce.entity.Order;
 import com.vishal.ecommerce.entity.OrderItem;
 import com.vishal.ecommerce.entity.Product;
@@ -51,6 +52,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    @Retryable(value = OptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public OrderResDto createOrder(String username, OrderReqDto request) {
         // Validate shipping address
         String address = request.getShippingAddress();
@@ -78,13 +80,14 @@ public class OrderServiceImpl implements OrderService {
             Product product = cartItem.getProduct();
             int qty = cartItem.getQuantity();
 
+            // Stock validation BEFORE deduction (with version check)
             if (product.getStockQuantity() < qty) {
                 throw new BadRequestException("Insufficient stock for product: " + product.getName());
             }
 
-            // Deduct stock and save product
+            // Deduct stock - version will be auto-incremented by JPA
             product.setStockQuantity(product.getStockQuantity() - qty);
-            productRepository.save(product);
+            productRepository.save(product);  // Optimistic lock will check version
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
@@ -100,11 +103,11 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalPrice(total);
         Order savedOrder = orderRepository.save(order);
 
-        // Clear cart after successful order creation
         cartService.clearCart(username);
 
         return convertToDto(savedOrder);
     }
+
     @Override
     public OrderResDto getOrderById(String username, Long orderId) {
         User user = userRepository.findByUsername(username)
@@ -151,5 +154,4 @@ public class OrderServiceImpl implements OrderService {
                 itemDtos
         );
     }
-
 }

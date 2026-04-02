@@ -7,8 +7,7 @@ import lombok.Data;
 @Entity
 @Table(name = "products")
 public class Product {
-
-    @Id
+@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -25,6 +24,26 @@ public class Product {
 
     private String imageUrl;
 
-        public Product() {}
+    @Version
+    private Integer version;  // For optimistic locking
 
+    public Product() {}
+
+    // Getters
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public Double getPrice() { return price; }
+    public Integer getStockQuantity() { return stockQuantity; }
+    public String getImageUrl() { return imageUrl; }
+    public Integer getVersion() { return version; }
+
+    // Setters
+    public void setId(Long id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setDescription(String description) { this.description = description; }
+    public void setPrice(Double price) { this.price = price; }
+    public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setVersion(Integer version) { this.version = version; }
 }

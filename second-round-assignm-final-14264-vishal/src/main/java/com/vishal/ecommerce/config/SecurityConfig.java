@@ -40,8 +40,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName(null);
+
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            // CSRF is disabled for stateless REST API using JWT.
+            // For browser clients, CSRF protection would be needed, but this backend serves mobile/SPA apps.
+            // If CSRF is required, enable it for non-API endpoints only.
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**")  // Disable CSRF for API endpoints
+                .csrfTokenRequestHandler(requestHandler)
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/users/register", "/api/users/login", "/api/products", "/api/payments/webhook").permitAll()

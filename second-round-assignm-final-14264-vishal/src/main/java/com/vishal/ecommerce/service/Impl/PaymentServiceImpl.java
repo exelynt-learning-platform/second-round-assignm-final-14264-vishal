@@ -42,30 +42,35 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentIntentResDto createPaymentIntent(PaymentIntentReqDto request, String username) throws com.stripe.exception.StripeException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+public PaymentIntentResDto createPaymentIntent(PaymentIntentReqDto request, String username) throws StripeException {
+    User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Order order = orderRepository.findById(request.getOrderId())
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+    Order order = orderRepository.findById(request.getOrderId())
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (!order.getUser().getId().equals(user.getId())) {
-            throw new BadRequestException("You are not authorized to pay for this order");
-        }
-
-        long amount = (long) (order.getTotalPrice() * 100);
-
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setCurrency("usd")
-                .setAmount(amount)
-                .setDescription("Order #" + order.getId())
-                .putMetadata("orderId", order.getId().toString())
-                .build();
-
-        PaymentIntent paymentIntent = PaymentIntent.create(params);
-
-        return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
+    if (!order.getUser().getId().equals(user.getId())) {
+        throw new BadRequestException("You are not authorized to pay for this order");
     }
+
+    // Validate total price
+    if (order.getTotalPrice() == null || order.getTotalPrice() <= 0) {
+        throw new BadRequestException("Order total must be greater than zero");
+    }
+
+    long amount = (long) (order.getTotalPrice() * 100);
+
+    PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+            .setCurrency("usd")
+            .setAmount(amount)
+            .setDescription("Order #" + order.getId())
+            .putMetadata("orderId", order.getId().toString())
+            .build();
+
+    PaymentIntent paymentIntent = PaymentIntent.create(params);
+
+    return new PaymentIntentResDto(paymentIntent.getClientSecret(), "Payment intent created successfully");
+}
 
   @Override
 @Transactional

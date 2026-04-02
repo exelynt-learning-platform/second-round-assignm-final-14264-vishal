@@ -24,26 +24,27 @@ import com.vishal.ecommerce.service.CartService;
 @Service
 public class CartServiceImpl implements CartService {
 
-   private final UserRepository userRepository;
+  private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final StockValidator stockValidator;
 
     public CartServiceImpl(UserRepository userRepository, CartRepository cartRepository,
-                           CartItemRepository cartItemRepository, ProductRepository productRepository) {
+                           CartItemRepository cartItemRepository, ProductRepository productRepository,
+                           StockValidator stockValidator) {
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
+        this.stockValidator = stockValidator;
     }
 
-    // Helper: Get user or throw exception
     private User getUserOrThrow(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
     }
 
-    // Helper: Get or create cart for a user
     private Cart getOrCreateCart(User user) {
         return cartRepository.findByUser(user).orElseGet(() -> {
             Cart newCart = new Cart();
@@ -66,9 +67,7 @@ public class CartServiceImpl implements CartService {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        if (product.getStockQuantity() < request.getQuantity()) {
-            throw new BadRequestException("Insufficient stock. Available: " + product.getStockQuantity());
-        }
+        stockValidator.validateStock(product, request.getQuantity());
 
         Cart cart = getOrCreateCart(user);
 
@@ -78,11 +77,8 @@ public class CartServiceImpl implements CartService {
                 .orElse(null);
 
         if (existingItem != null) {
-            int newQuantity = existingItem.getQuantity() + request.getQuantity();
-            if (product.getStockQuantity() < newQuantity) {
-                throw new BadRequestException("Insufficient stock for total quantity");
-            }
-            existingItem.setQuantity(newQuantity);
+            stockValidator.validateStockForAddition(product, existingItem.getQuantity(), request.getQuantity());
+            existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
             cartItemRepository.save(existingItem);
         } else {
             CartItem newItem = new CartItem();
@@ -96,32 +92,34 @@ public class CartServiceImpl implements CartService {
         return convertToDto(cart);
     }
 
-  @Override
-@Transactional
-public CartResDto updateCartItem(String username, Long itemId, Integer quantity) {
-    User user = getUserOrThrow(username);
-    Cart cart = getOrCreateCart(user);
-
-    CartItem item = cart.getItems().stream()
-            .filter(i -> i.getId().equals(itemId))
-            .findFirst()
-            .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
-
-    if (quantity <= 0) {
-        cart.getItems().remove(item);
-        cartItemRepository.delete(item);
-    } else {
-        Product product = item.getProduct();
-        // Add stock validation
-        if (product.getStockQuantity() < quantity) {
-            throw new BadRequestException("Insufficient stock. Available: " + product.getStockQuantity());
+    @Override
+    @Transactional
+    public CartResDto updateCartItem(String username, Long itemId, Integer quantity) {
+        // Add null check
+        if (quantity == null) {
+            throw new BadRequestException("Quantity cannot be null");
         }
-        item.setQuantity(quantity);
-        cartItemRepository.save(item);
-    }
 
-    return convertToDto(cart);
-}
+        User user = getUserOrThrow(username);
+        Cart cart = getOrCreateCart(user);
+
+        CartItem item = cart.getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+
+        if (quantity <= 0) {
+            cart.getItems().remove(item);
+            cartItemRepository.delete(item);
+        } else {
+            Product product = item.getProduct();
+            stockValidator.validateStockForUpdate(product, quantity);
+            item.setQuantity(quantity);
+            cartItemRepository.save(item);
+        }
+
+        return convertToDto(cart);
+    }
 
     @Override
     @Transactional

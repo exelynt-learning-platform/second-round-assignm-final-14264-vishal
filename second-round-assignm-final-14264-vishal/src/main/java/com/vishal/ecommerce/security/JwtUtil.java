@@ -16,11 +16,18 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+     @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration}")
     private Long expiration;
+
+    @PostConstruct
+    public void init() {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 characters long");
+        }
+    }
 
     private Key getSigningKey() {
         byte[] keyBytes = secret.getBytes();
@@ -39,12 +46,7 @@ public class JwtUtil {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-@PostConstruct
-public void init() {
-    if (secret == null || secret.getBytes().length < 32) {
-        throw new IllegalStateException("JWT secret must be at least 32 characters long");
-    }
-}
+
     public String extractUsername(String token) {
         return getClaims(token).getSubject();
     }
