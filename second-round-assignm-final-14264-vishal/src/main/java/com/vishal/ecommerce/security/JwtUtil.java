@@ -1,5 +1,6 @@
 package com.vishal.ecommerce.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -22,16 +23,12 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        if (keyBytes.length < 32) {
-            throw new IllegalArgumentException("JWT secret must be at least 32 bytes");
-        }
+    private Key getSigningKey() {
+        byte[] keyBytes = secret.getBytes();
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(String username, String role) {
-
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
@@ -44,40 +41,28 @@ public class JwtUtil {
                 .compact();
     }
 
-    @PostConstruct
-public void validateJwtSecret() {
-    if (secret == null || secret.isBlank()) {
-        throw new IllegalStateException("JWT secret is not configured");
-    }
-     if (secret.length() < 32) {
-        throw new IllegalStateException("JWT secret must be at least 32 characters");
-    }
-}
-
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return getClaims(token).getSubject();
     }
 
     public String extractRole(String token) {
-    return Jwts.parserBuilder()
-        .setSigningKey(getSigningKey())
-        .build()
-        .parseClaimsJws(token)
-        .getBody()
-        .get("role", String.class);
-}
+        return getClaims(token).get("role", String.class);
+    }
 
-    public boolean isTokenValid(String token) {
+    public boolean validateToken(String token) {
         try {
-            extractUsername(token);
+            getClaims(token);
             return true;
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

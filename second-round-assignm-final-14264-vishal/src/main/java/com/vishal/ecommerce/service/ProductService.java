@@ -9,14 +9,10 @@ public interface ProductService {
 
 
             List<ProductResDto> getAllProducts();
-
-                ProductResDto getProductById(Long id);
-
-                    ProductResDto createProduct(ProductReqDto request);
-
-                    ProductResDto updateProduct(Long id, ProductReqDto request);
-void deleteProduct(Long id);
-
+    ProductResDto getProductById(Long id);
+    ProductResDto createProduct(ProductReqDto request);
+    ProductResDto updateProduct(Long id, ProductReqDto request);
+    void deleteProduct(Long id);
 
 
 }

@@ -20,9 +20,7 @@ public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+ 
 
     @PostMapping("/register")
     public ResponseEntity<UserAuthResDto> register(@Valid @RequestBody UserRegisterReqDto request) {
