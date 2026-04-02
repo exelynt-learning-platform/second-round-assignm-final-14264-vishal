@@ -13,7 +13,7 @@ import com.vishal.ecommerce.dto.req.OrderReqDto;
 import com.vishal.ecommerce.dto.res.OrderItemResDto;
 import com.vishal.ecommerce.dto.res.OrderResDto;
 import com.vishal.ecommerce.entity.Cart;
-import com.vishal.ecommerce.entity.CartItem;      // <-- Added import
+import com.vishal.ecommerce.entity.CartItem;
 import com.vishal.ecommerce.entity.Order;
 import com.vishal.ecommerce.entity.OrderItem;
 import com.vishal.ecommerce.entity.Product;
@@ -55,7 +55,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Retryable(value = OptimisticLockingFailureException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public OrderResDto createOrder(String username, OrderReqDto request) {
-        // Validate shipping address
+        // Validate shipping address - prevent DB constraint violation
         String address = request.getShippingAddress();
         if (address == null || address.trim().isEmpty() || address.length() > 255) {
             throw new ValidationException("Shipping address must be between 1 and 255 characters");

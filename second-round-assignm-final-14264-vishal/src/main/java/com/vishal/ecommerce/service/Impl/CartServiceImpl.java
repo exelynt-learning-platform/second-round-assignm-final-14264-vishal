@@ -78,10 +78,12 @@ public class CartServiceImpl implements CartService {
                 .orElse(null);
 
         if (existingItem != null) {
+            // Existing item: validate total quantity
             stockValidator.validateStockForAddition(product, existingItem.getQuantity(), request.getQuantity());
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
             cartItemRepository.save(existingItem);
         } else {
+            // New item: create and add
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
             newItem.setProduct(product);

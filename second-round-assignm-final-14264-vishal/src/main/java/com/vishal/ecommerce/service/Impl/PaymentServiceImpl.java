@@ -37,7 +37,7 @@ public class PaymentServiceImpl implements PaymentService {
     @PostConstruct
     public void init() {
         if (stripeSecretKey == null || stripeSecretKey.trim().isEmpty()) {
-            throw new IllegalStateException("Stripe secret key is not configured. Set STRIPE_SECRET_KEY environment variable.");
+            throw new IllegalStateException("Stripe secret key is not configured. Please set STRIPE_SECRET_KEY environment variable.");
         }
         Stripe.apiKey = stripeSecretKey;
     }
