@@ -171,8 +171,10 @@ items.add(item);
     public void clearCart(String username) {
         User user = userRepository.findByUsername(username);
         Cart cart = getOrCreateCart(user);
+if (cart.getItems() != null) {
         cart.getItems().clear();
-        cartRepository.save(cart);
+    }        
+    cartRepository.save(cart);
     }
 
     private void validateCartItemOwnership(CartItem item, String username) {
