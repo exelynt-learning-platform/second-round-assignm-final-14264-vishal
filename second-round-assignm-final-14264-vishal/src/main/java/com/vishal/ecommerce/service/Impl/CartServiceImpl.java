@@ -147,21 +147,24 @@ public class CartServiceImpl implements CartService {
         cart.getItems().clear();
     }
 
-    // Extract item conversion to separate method
+    private double calculateSubtotal(Product product, int quantity) {
+        if (product.getPrice() == null) {
+            throw new IllegalStateException("Product price cannot be null for product: " + product.getName());
+        }
+        return product.getPrice() * quantity;
+    }
+
     private CartItemResDto convertItemToDto(CartItem item) {
-        Product p = item.getProduct();
-        if (p == null) {
+        Product product = item.getProduct();
+        if (product == null) {
             throw new IllegalStateException("Cart item references missing product");
         }
-        if (p.getPrice() == null) {
-            throw new IllegalStateException("Product price cannot be null for product: " + p.getName());
-        }
-        double subtotal = p.getPrice() * item.getQuantity();
+        double subtotal = calculateSubtotal(product, item.getQuantity());
         return new CartItemResDto(
                 item.getId(),
-                p.getId(),
-                p.getName(),
-                p.getPrice(),
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
                 item.getQuantity(),
                 subtotal
         );

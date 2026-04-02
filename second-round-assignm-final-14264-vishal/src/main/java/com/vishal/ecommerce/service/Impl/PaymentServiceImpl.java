@@ -22,11 +22,18 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+
+    // Simple in-memory cache for processed webhook event IDs (for replay protection)
+    private final Set<String> processedEventIds = new HashSet<>();
 
     @Value("${stripe.secret.key}")
     private String stripeSecretKey;
@@ -91,25 +98,52 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             Event event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
 
+            // Replay protection: reject if event already processed
+            String eventId = event.getId();
+            if (processedEventIds.contains(eventId)) {
+                System.out.println("Duplicate webhook event ignored: " + eventId);
+                return;
+            }
+
+            // Optional: timestamp validation (reject events older than 5 minutes)
+            long eventTimestamp = event.getCreated();
+            long now = Instant.now().getEpochSecond();
+            if (now - eventTimestamp > 300) {
+                System.out.println("Webhook event too old: " + eventId);
+                return; // or throw exception depending on requirements
+            }
+
             if ("payment_intent.succeeded".equals(event.getType()) || "payment_intent.payment_failed".equals(event.getType())) {
                 PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().get();
                 String orderIdStr = paymentIntent.getMetadata().get("orderId");
-                
-                // Add null check for orderId metadata
+
                 if (orderIdStr == null) {
                     throw new BadRequestException("Missing orderId in payment metadata");
                 }
-                
-                Long orderId = Long.parseLong(orderIdStr);
+
+                Long orderId;
+                try {
+                    orderId = Long.parseLong(orderIdStr);
+                } catch (NumberFormatException e) {
+                    throw new BadRequestException("Invalid orderId format in payment metadata: " + orderIdStr);
+                }
+
                 Order order = orderRepository.findById(orderId)
                         .orElseThrow(() -> new ResourceNotFoundException("Order not found for webhook"));
-                
+
                 if ("payment_intent.succeeded".equals(event.getType())) {
                     order.setPaymentStatus("PAID");
                 } else {
                     order.setPaymentStatus("FAILED");
                 }
                 orderRepository.save(order);
+            }
+
+            // Mark event as processed
+            processedEventIds.add(eventId);
+            // Optional: clean up old event IDs to avoid memory leak (simple size cap)
+            if (processedEventIds.size() > 10000) {
+                processedEventIds.clear();
             }
         } catch (SignatureVerificationException e) {
             throw new BadRequestException("Invalid webhook signature");

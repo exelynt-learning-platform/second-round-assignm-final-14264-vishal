@@ -87,7 +87,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             product.setStockQuantity(product.getStockQuantity() - qty);
-            productRepository.save(product);   // Optimistic locking will check @Version
+            productRepository.save(product);
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);

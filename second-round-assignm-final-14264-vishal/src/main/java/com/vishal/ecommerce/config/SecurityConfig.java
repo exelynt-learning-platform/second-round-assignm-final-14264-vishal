@@ -21,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -29,7 +30,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final CustomUserDetailsService customUserDetailsService;
 
-    @Value("${cors.allowed.origins}")
+    @Value("${cors.allowed.origins:http://localhost:3000}")
     private String allowedOrigins;
 
     public SecurityConfig(JwtFilter jwtFilter, CustomUserDetailsService customUserDetailsService) {
@@ -50,12 +51,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Restrict origins – never use "*" in production
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        
+        // Parse and validate allowed origins – never use "*" in production
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> origin.startsWith("http://") || origin.startsWith("https://"))
+                .collect(Collectors.toList());
+        
+        if (origins.isEmpty()) {
+            throw new IllegalStateException("No valid CORS origins configured. Set cors.allowed.origins property.");
+        }
+        
         configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
- configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Stripe-Signature"));
-         configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Stripe-Signature"));
+        configuration.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -64,7 +75,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
