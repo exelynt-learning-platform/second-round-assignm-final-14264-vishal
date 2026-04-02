@@ -41,8 +41,9 @@ public class SecurityConfig {
 
 if (role == null || role.isBlank()) {
     role = "USER";
-} 
-role = role.toUpperCase();
+}  else {
+    role = role.toUpperCase();
+}
 if (!role.equals("USER") && !role.equals("ADMIN")) {
     throw new IllegalArgumentException("Invalid role");
 }
