@@ -53,8 +53,12 @@ public class CartServiceImpl implements CartService {
     List<CartItemResDto> itemDtos = new ArrayList<>();
     double total = 0;
 
-    List<CartItem> items = cart.getItems();
+List<CartItem> items = cart.getItems();
 
+if (items == null) {
+    items = new ArrayList<>();
+    cart.setItems(items);
+}
     if (items != null) {
         for (CartItem item : items) {
             if (item.getProduct() == null) {
@@ -96,8 +100,12 @@ public class CartServiceImpl implements CartService {
        Product product = productRepository.findById(request.getProductId()).
        orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-            List<CartItem> items = cart.getItems();
+List<CartItem> items = cart.getItems();
 
+if (items == null) {
+    items = new ArrayList<>();
+    cart.setItems(items);
+}
 boolean exists = items != null && items.stream()
         .anyMatch(i -> i.getProduct() != null &&
                 i.getProduct().getId().equals(product.getId()));
@@ -116,8 +124,7 @@ if (exists) {
         item.setQuantity(request.getQuantity());
 
         cartItemRepository.save(item);
-        cart.getItems().add(item);
-
+items.add(item);
         return mapToCartResDto(cart);
     }
 

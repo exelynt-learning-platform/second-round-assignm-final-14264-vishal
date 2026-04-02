@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.vishal.ecommerce.dto.req.OrderReqDto;
 import com.vishal.ecommerce.dto.res.OrderResDto;
 import com.vishal.ecommerce.entity.Cart;
+import com.vishal.ecommerce.entity.CartItem;
 import com.vishal.ecommerce.entity.Order;
 import com.vishal.ecommerce.entity.Product;
 import com.vishal.ecommerce.entity.User;
@@ -51,17 +52,19 @@ public class OrderServiceImpl implements OrderService {
 
         Cart cart = cartRepository.findByUser(user);
 
-        if (cart == null || cart.getItems()== null || cart.getItems().isEmpty()) {
-            throw new BadRequestException("Cart is empty");
-        }
+        List<CartItem> cartItems = (cart != null) ? cart.getItems() : null;
+
+        
+       if (cart == null || cartItems == null || cartItems.isEmpty()) {
+    throw new BadRequestException("Cart is empty");
+}
 
         List<Product> products = new ArrayList<>();
         double total = 0;
 
-        List<com.vishal.ecommerce.entity.CartItem> cartItemsCopy =
-        new ArrayList<>(cart.getItems());
+        List<CartItem> cartItemsCopy = new ArrayList<>(cartItems);
 
-for (var item : cartItemsCopy) {
+for (CartItem item : cartItemsCopy) {
 
             Product product = item.getProduct();
 
@@ -90,8 +93,9 @@ for (var item : cartItemsCopy) {
 
         orderRepository.save(order);
 
-        cart.getItems().clear();
-        cartRepository.save(cart);
+if (cart.getItems() != null) {
+    cart.getItems().clear();
+}        cartRepository.save(cart);
 
         return mapToOrderResDto(order);
     }
