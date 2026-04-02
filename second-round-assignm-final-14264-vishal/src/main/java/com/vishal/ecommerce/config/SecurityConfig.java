@@ -40,11 +40,14 @@ public class SecurityConfig {
            String role = user.getRole();
 
 if (role == null || role.isBlank()) {
-    role = "USER";
+    role = "ROLE_USER";
 }  else {
     role = role.trim().toUpperCase();
+    if (!role.startsWith("ROLE_")) {
+        role = "ROLE_" + role;
+    }
 }
-if (!role.equals("USER") && !role.equals("ADMIN")) {
+if (!role.equals("ROLE_USER") && !role.equals("ROLE_ADMIN")) {
     throw new IllegalArgumentException("Invalid role: " + role);
 }
     
@@ -53,7 +56,7 @@ if (!role.equals("USER") && !role.equals("ADMIN")) {
             return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
         .password(user.getPassword())
-        .roles(role)
+        .authorities(role)
         .build();
 
         };
