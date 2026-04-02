@@ -43,7 +43,10 @@ public class CartServiceImpl implements CartService {
         if (cart == null) {
             cart = new Cart();
             cart.setUser(user);
+            cart.setItems(new ArrayList<>());
             cartRepository.save(cart);
+        }else if(cart.getItems() == null){
+cart.setItems(new ArrayList<>());
         }
         return cart;
     }
@@ -55,9 +58,7 @@ public class CartServiceImpl implements CartService {
 
 List<CartItem> items = cart.getItems();
 
-if (items == null) {
-    items = new ArrayList<>();
-}
+
 
 for (CartItem item : items) {
         if (item.getProduct() == null) continue;
@@ -99,10 +100,7 @@ for (CartItem item : items) {
 
 List<CartItem> items = cart.getItems();
 
-if (items == null) {
-    items = new ArrayList<>();
-    cart.setItems(items);
-}
+
 boolean exists = items.stream()
         .anyMatch(i -> i.getProduct() != null &&
                 i.getProduct().getId().equals(product.getId()));
